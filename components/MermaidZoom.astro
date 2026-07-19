@@ -10,6 +10,40 @@
       .forEach((el) => el.removeAttribute("data-zoomed"));
   };
 
+  // Mermaid's rendered <svg> carries width="100%" (a percentage, not an
+  // intrinsic size) and no height attribute — only a viewBox. Root <svg>
+  // elements don't reliably participate in CSS's "auto + aspect-ratio"
+  // replaced-sizing algorithm the way <img> does — `width: auto; height:
+  // auto;` (with or without an explicit `aspect-ratio`) resolves to 0x0 in
+  // testing. Compute the fitted pixel size directly from the viewBox instead
+  // of leaving it to CSS auto-sizing.
+  const sizeForZoom = (diagram: Element) => {
+    const svg = diagram.querySelector("svg");
+    const viewBox = svg?.getAttribute("viewBox");
+    if (!svg || !viewBox) {
+      return;
+    }
+    const parts = viewBox.trim().split(/\s+/).map(Number);
+    if (parts.length !== 4 || !parts.every(Number.isFinite) || parts[2] <= 0 || parts[3] <= 0) {
+      return;
+    }
+    const [, , diagramWidth, diagramHeight] = parts;
+    // Matches the padding/max-size budget in theme.css's data-zoomed rules.
+    const maxWidth = window.innerWidth * 0.95;
+    const maxHeight = window.innerHeight * 0.95;
+    const scale = Math.min(maxWidth / diagramWidth, maxHeight / diagramHeight, 1);
+    svg.style.width = `${diagramWidth * scale}px`;
+    svg.style.height = `${diagramHeight * scale}px`;
+  };
+
+  const clearZoomSize = (diagram: Element) => {
+    const svg = diagram.querySelector("svg");
+    if (svg) {
+      svg.style.width = "";
+      svg.style.height = "";
+    }
+  };
+
   document.addEventListener("click", (event) => {
     const target = event.target as HTMLElement;
     const diagram = target.closest("blume-mermaid");
@@ -18,7 +52,10 @@
     }
     const isZoomed = diagram.getAttribute("data-zoomed") === "true";
     closeAll();
-    if (!isZoomed) {
+    if (isZoomed) {
+      clearZoomSize(diagram);
+    } else {
+      sizeForZoom(diagram);
       diagram.setAttribute("data-zoomed", "true");
     }
   });

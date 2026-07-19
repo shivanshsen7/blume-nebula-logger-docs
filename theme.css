@@ -9,7 +9,7 @@ blume-mermaid svg {
 blume-mermaid[data-zoomed="true"] {
   position: fixed;
   inset: 0;
-  z-index: 999;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,11 +19,11 @@ blume-mermaid[data-zoomed="true"] {
   cursor: zoom-out;
 }
 
-/* !important guards against Mermaid's own inline width/height/style on the
-   generated <svg>, which otherwise outrank the plain rule above it. */
+/* MermaidZoom.astro sets an explicit inline width/height in px on click
+   (root <svg> elements don't reliably resolve `auto` sizing against a
+   viewBox the way <img> does). These are just a safety cap in case that
+   JS doesn't run — no !important, so it doesn't fight the inline styles. */
 blume-mermaid[data-zoomed="true"] svg {
-  width: auto !important;
-  height: auto !important;
-  max-width: 95vw !important;
-  max-height: 95vh !important;
+  max-width: 95vw;
+  max-height: 95vh;
 }
