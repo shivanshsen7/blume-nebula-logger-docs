@@ -6,6 +6,22 @@ sidebar: { label: "Plugins", order: 4 }
 
 The Plugins module contains optional, self-contained extensions built on top of Nebula Logger's core plugin framework (`LoggerPlugin`). Each plugin hooks into the logging or purge pipeline to add extra behavior — archiving log data to a BigObject, applying configurable retention rules, or sending Slack alerts — without changing the core logging engine.
 
+```mermaid
+flowchart TD
+    subgraph Pipeline["Logging / Purge Pipeline"]
+        SAVE["Log entry saved"] --> TRIG["Triggerable: execute(LoggerPlugin_t, LoggerTriggerableContext)"]
+        RUN["LogBatchPurger batch run"] --> BATCH["Batchable: start / execute / finish(LoggerPlugin_t, LoggerBatchableContext)"]
+    end
+    TRIG --> ARCHIVE["LogEntryArchivePlugin"]
+    TRIG --> RETENTION["LogRetentionRulesPlugin"]
+    TRIG --> SLACK["SlackLoggerPlugin"]
+    BATCH --> ARCHIVE
+    ARCHIVE --> BIGOBJ["LogEntryArchive__b"]
+    RETENTION --> RETDATE["Log__c retention date"]
+    SLACK --> MSG["Slack message payload"]
+    SLACK -.->|"async via Queueable"| QUEUE["execute(System.QueueableContext)"]
+```
+
 ## LogEntryArchivePlugin
 
 Optional plugin that provides a BigObject, `LogEntryArchive__b`, as an alternative storage option to the platform event `LogEntryEvent__e`. It implements the Logger plugin framework's triggerable and batchable interfaces so it can run both when logs are saved and when `LogBatchPurger` runs.

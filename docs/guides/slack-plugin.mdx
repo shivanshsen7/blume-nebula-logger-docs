@@ -14,6 +14,22 @@ When enabled and configured, the Slack plugin monitors your logs and automatical
 
 ![Slack plugin notification example](https://raw.githubusercontent.com/wiki/jongpie/NebulaLogger/images/slack-plugin-notification.png)
 
+```mermaid
+sequenceDiagram
+    participant LE as Log__c / LogEntry__c
+    participant Plugin as Slack Plugin (trigger-based)
+    participant Config as LoggerSObjectHandlerPluginParameter__mdt
+    participant Slack as Slack channel/user
+
+    LE->>Plugin: triggers plugin framework
+    Plugin->>Config: reads logging level threshold
+    alt log entry meets configured threshold
+        Plugin->>Slack: posts notification
+    else below threshold
+        Plugin-->>Plugin: no notification sent
+    end
+```
+
 ## What You'll Learn
 
 The Slack plugin demonstrates several key patterns for extending Nebula Logger:

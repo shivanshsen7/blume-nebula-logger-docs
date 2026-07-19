@@ -10,6 +10,19 @@ sidebar:
 
 To help development and support teams better manage logs and address underlying code or config issues, Nebula Logger provides several fields on `Log__c` to track ownership, priority, and status. While these fields are optional, they're essential in critical environments (production, QA sandboxes, UAT sandboxes, etc.) for monitoring ongoing user activities.
 
+```mermaid
+flowchart TD
+    A["Log__c record"] --> B{"Which quick action?"}
+    B -->|"Manage Log"| C["Edit any editable field"]
+    C --> D{"Status__c changed?"}
+    D -->|Yes| E["ClosedBy__c and ClosedDate__c set"]
+    E --> F["IsClosed__c set per LogStatus__mdt config"]
+    F --> G["IsResolved__c set<br/>(only if status is closed and resolved per LogStatus__mdt)"]
+    D -->|No| H["Other fields updated only"]
+    B -->|"View JSON"| I["Log__c plus related LogEntry__c<br/>records rendered as JSON (fields per FLS)"]
+    I --> J["Copy JSON output to clipboard"]
+```
+
 ## Manage Quick Action
 
 All editable fields on `Log__c` can be updated via the **Manage Log** quick action. When you modify `Log__c.Status__c`, several fields are automatically set:

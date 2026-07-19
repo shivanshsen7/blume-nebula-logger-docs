@@ -8,6 +8,16 @@ sidebar:
 
 Nebula Logger can automatically mask sensitive data—such as credit card numbers and social security numbers—within fields that may contain sensitive information. This feature provides compliance-friendly logging without requiring manual data filtering.
 
+```mermaid
+flowchart TD
+    A["LogEntryEvent__e sensitive field<br/>(Message__c, RecordJson__c, HttpRequestBody__c,<br/>HttpResponseBody__c, RestRequestBody__c, RestResponseBody__c)"] --> B{"LoggerSettings__c masking<br/>enabled for this org/profile/user?"}
+    B -->|No| C["Field value stored as-is"]
+    B -->|Yes| D["LogEntryDataMaskRule__mdt rules evaluated<br/>(Visa, Mastercard, SSN, or custom rules)"]
+    D -->|"Pattern matched"| E["Sensitive data masked"]
+    D -->|"No pattern matched"| C
+    E --> F["Masked value stored on LogEntry__c"]
+```
+
 ## Masked Fields
 
 Data masking is applied to the following `LogEntryEvent__e` platform event fields, and the corresponding fields on `LogEntry__c` records after conversion:

@@ -6,6 +6,14 @@ sidebar: { label: "Custom Fields", order: 18 }
 
 Since [v4.13.14](https://github.com/jongpie/NebulaLogger/releases/tag/v4.13.14), Nebula Logger provides the ability to add your own custom fields to its included custom objects. This is helpful in orgs that want to extend Nebula Logger's included data model by creating their own org-specific or project-specific fields.
 
+```mermaid
+flowchart TD
+    A["Custom field added on LogEntryEvent__e"] --> B["Corresponding custom field added on<br/>Log__c, LogEntry__c, or LoggerScenario__c"]
+    B --> C["Mapping record created in<br/>LoggerFieldMapping__mdt"]
+    C --> D["setField() called in code<br/>(Apex or JavaScript)"]
+    D --> E["During log processing, value copied<br/>from source LogEntryEvent__e field<br/>to mapped target object field"]
+```
+
 ## Getting Started
 
 To start using custom field mappings, follow these four steps:

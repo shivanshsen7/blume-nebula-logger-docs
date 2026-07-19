@@ -21,6 +21,21 @@ This string-based action system and generic `Object` values allow Nebula Logger 
 
 Instantiate the `CallableLogger` dynamically and check for availability:
 
+```mermaid
+sequenceDiagram
+    participant Caller as ISV / Package Code
+    participant CL as CallableLogger (Callable)
+
+    Caller->>Caller: Type.forName('Nebula','CallableLogger') ?? Type.forName('CallableLogger')
+    Caller->>Caller: newInstance() returns nebulaLoggerCallable (or null)
+    alt nebulaLoggerCallable == null
+        Caller->>Caller: Nebula Logger unavailable, exit early (or use fallback)
+    else Nebula Logger available
+        Caller->>CL: call(action, args map)
+        CL-->>Caller: output map (isSuccess, transactionId, ...)
+    end
+```
+
 ```apex
 // Check if Nebula Logger is available in the org
 Type nebulaLoggerCallableType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');

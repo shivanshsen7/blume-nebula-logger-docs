@@ -8,6 +8,17 @@ sidebar:
 
 If you're building a Salesforce package (1GP or 2GP) and want to provide logging capabilities, there's no one-size-fits-all approach. Nebula Logger supports four distinct integration strategies, each with its own tradeoffs for maintainability, customer experience, and flexibility.
 
+```mermaid
+flowchart TD
+    START["Choose a Nebula Logger<br/>integration strategy"] --> Q1{"OK maintaining your own<br/>copy of Nebula Logger's metadata?"}
+    Q1 -->|Yes| A1["Approach 1: Bundle Nebula Logger's Metadata<br/>Full control, no external dependency —<br/>but maintenance burden + data fragmentation"]
+    Q1 -->|No| Q2{"OK requiring customers to<br/>install Nebula Logger?"}
+    Q2 -->|Yes| A2["Approach 2: Required Package Dependency<br/>Centralized logging for existing Nebula Logger customers —<br/>but blocks customers who don't have it"]
+    Q2 -->|No| Q3{"Need Flow or Lightning Component<br/>logging, not just Apex?"}
+    Q3 -->|Yes| A3["Approach 3: Optional Dependency with<br/>Extension Packages<br/>Works for everyone, extensible —<br/>but added complexity, multiple packages"]
+    Q3 -->|No| A4["Approach 4: Optional Dependency via<br/>Apex's Callable Interface<br/>Loosely coupled, no extra packages —<br/>but Apex-only, no compile-time safety"]
+```
+
 ## Approach 1: Bundle Nebula Logger's Metadata
 
 Include all of Nebula Logger's open-source metadata directly in your package. You maintain your own copy and have full control over customization.

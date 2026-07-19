@@ -10,6 +10,18 @@ sidebar:
 
 Nebula Logger includes 4 permission sets designed to cover common scenarios for granting users partial or full access to the logging system and related objects.
 
+```mermaid
+flowchart TD
+    A["Which access does the user need?"] --> B{"Experience Cloud / guest user needs<br/>explicit Apex access to generate logs?"}
+    B -->|Yes| LC["LoggerLogCreator"]
+    B -->|No| C{"Needs to view only their own<br/>log records (read-only, no console app)?"}
+    C -->|Yes| EU["LoggerEndUser"]
+    C -->|No| D{"Needs read-only view-all access to all<br/>logging data plus console app tabs?"}
+    D -->|Yes| LV["LoggerLogViewer"]
+    D -->|No| E{"Needs modify-all control of logging data<br/>plus edit access to console app tabs?"}
+    E -->|Yes| ADM["LoggerAdmin"]
+```
+
 ## LoggerLogCreator Permission Set
 
 This permission set provides explicit access to Nebula Logger's top-level Apex classes and metadata used to generate logging data through Apex, Lightning Components, Flow, and Process Builder:

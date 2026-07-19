@@ -10,6 +10,14 @@ The hierarchy custom settings object `LoggerSettings__c` is used to control the 
 
 ![Logger Settings](https://raw.githubusercontent.com/wiki/jongpie/NebulaLogger/images/logger-settings.png)
 
+```mermaid
+flowchart TD
+    A["LoggerSettings__c<br/>(hierarchy custom setting)"] --> B{"Configured at which<br/>Setup Owner level?"}
+    B -->|"Org"| C["Org-level LoggerSettings__c"]
+    B -->|"Profile"| D["Profile-level LoggerSettings__c"]
+    B -->|"User"| E["User-level LoggerSettings__c"]
+```
+
 ## Settings Reference
 
 | Setting Field Name | Default Value | Description |

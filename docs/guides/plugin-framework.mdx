@@ -17,6 +17,17 @@ If you want to add your own automation to the included custom objects, you can l
 
 This framework (currently in beta) makes it easy to build your own plugins, or deploy/install others' prebuilt packages, without having to modify the logging system directly.
 
+```mermaid
+flowchart TD
+    TRIG["Trigger event on a supported object<br/>(BEFORE_INSERT, BEFORE_UPDATE, AFTER_INSERT, AFTER_UPDATE, etc.)"] --> OBJ["LogEntryEvent__e, Log__c, LogEntry__c,<br/>LogEntryTag__c, LoggerTag__c, or LoggerScenario__c"]
+    OBJ --> CFG["LoggerSObjectHandlerPlugin__mdt<br/>defines plugin type & Apex class/Flow API name"]
+    CFG --> TYPE{"Plugin type?"}
+    TYPE -->|Flow| FLOW["Auto-launched Flow<br/>in: triggerOperationType, triggerNew, triggerOld<br/>out: updatedTriggerNew"]
+    TYPE -->|Apex| APEX["LoggerPlugin.Triggerable.execute()<br/>configuration, LoggerTriggerableContext input"]
+    PARAMS["LoggerSObjectHandlerPluginParameter__mdt<br/>configurable parameters"] -.-> FLOW
+    PARAMS -.-> APEX
+```
+
 ## Build a plugin
 
 <Tabs>

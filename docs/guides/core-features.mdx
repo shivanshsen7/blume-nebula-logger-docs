@@ -40,6 +40,18 @@ Flow builders can use the `Tags` property to specify a comma-separated list of t
 
 Admins can configure tagging rules that append additional tags automatically, using the custom metadata type `LogEntryTagRule__mdt`.
 
+```mermaid
+flowchart TD
+    A["LogEntry__c record saved"] --> B{"Insert or update?"}
+    B -->|Update| Z1["Rule-based tags not evaluated<br/>(rules only run on insert)"]
+    B -->|Insert| C{"Any enabled<br/>LogEntryTagRule__mdt records?"}
+    C -->|No| Z2["No rule-based tags added"]
+    C -->|Yes| D["For each enabled rule,<br/>evaluate its configured Field"]
+    D --> E{"Field value matches<br/>Comparison Type + Comparison Value?<br/>(CONTAINS / EQUALS / MATCHES_REGEX / STARTS_WITH)"}
+    E -->|No| F["Rule skipped"]
+    E -->|Yes| G["Apply rule's Tags<br/>(added to any tags already set via Apex/Flow)"]
+```
+
 - Rule-based tags are only added when `LogEntry__c` records are created (not on update).
 - Rule-based tags are added in addition to any tags already added via Apex and/or Flow.
 - Each rule evaluates the value of a single field on `LogEntry__c` (e.g., `LogEntry__c.Message__c`).
@@ -60,6 +72,15 @@ For example, a rule configured to match "My Important Text" in `Message__c` coul
 ## Choosing a tagging mode
 
 Once tagging is set up in Apex or Flow, you choose how tags are stored in your org. You can also build your own plugin to leverage a custom tagging system (plugins aren't currently available in the managed package).
+
+```mermaid
+flowchart TD
+    A["Choose how to store LogEntry__c tags"] --> B{"Using the managed package?"}
+    B -->|Yes| C["Logger's Custom Tagging Objects (Default)<br/>LoggerTag__c + LogEntryTag__c"]
+    B -->|No: unlocked package| D{"Want tags visible in Chatter to<br/>every user and filterable in list views?"}
+    D -->|Yes| E["Salesforce Topic & TopicAssignment Objects<br/>via Chatter Topics"]
+    D -->|No: prefer standard sharing model<br/>and full reports/dashboards support| C
+```
 
 | | Logger's Custom Tagging Objects (Default) | Salesforce `Topic` and `TopicAssignment` Objects |
 |---|---|---|

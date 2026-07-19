@@ -6,6 +6,28 @@ sidebar: { label: "Configuration", order: 3 }
 
 The Configuration module contains the Apex classes that read Nebula Logger's custom metadata types (org defaults, plugins, scenario rules, field mappings) and expose them to the rest of the framework, along with supporting caching and context objects used by the plugin and trigger-handler systems.
 
+```mermaid
+flowchart TD
+    subgraph MDT["Custom Metadata"]
+        PARAM_MDT["LoggerParameter__mdt"]
+        PLUGIN_MDT["LoggerPlugin__mdt"]
+        RULE_MDT["LoggerScenarioRule__mdt"]
+        MAP_MDT["LoggerFieldMapping__mdt"]
+    end
+    PARAM_MDT -->|"getLoggerParameters"| SEL["LoggerConfigurationSelector"]
+    PLUGIN_MDT -->|"getLoggerPlugins"| SEL
+    RULE_MDT -->|"getLoggerScenarioRules"| SEL
+    MAP_MDT -->|"getLoggerFieldMappings"| SEL
+    PARAM_MDT --> PARAM["LoggerParameter"]
+    PLUGIN_MDT -->|"getPluginConfigurations"| PLUGIN["LoggerPlugin"]
+    RULE_MDT --> SCEN["LoggerScenarioRule"]
+    MAP_MDT --> MAPPER["LoggerFieldMapper"]
+    PLUGIN --> BATCHIFACE["LoggerPlugin.Batchable"]
+    PLUGIN --> TRIGIFACE["LoggerPlugin.Triggerable"]
+    BATCHCTX["LoggerBatchableContext"] -.->|"passed in during LogBatchPurger"| BATCHIFACE
+    TRIGCTX["LoggerTriggerableContext"] -.->|"passed in within LoggerSObjectHandler"| TRIGIFACE
+```
+
 ## LoggerParameter
 
 Provides a centralized way to load configuration parameters for SObject handlers and plugins, casting the underlying `LoggerParameter__mdt` custom metadata values to common Apex data types. It also exposes a large set of static properties representing Nebula Logger's own built-in configuration switches (e.g., whether to query user/org/network data, enable tagging, use Platform Cache, etc.), each backed by a specific `LoggerParameter` custom metadata record and a documented default.

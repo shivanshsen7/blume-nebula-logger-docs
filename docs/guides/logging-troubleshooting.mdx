@@ -8,6 +8,17 @@ sidebar:
 
 Occasionally, issues can come up that prevent Logger from successfully saving log entries — this could occur due to bugs within Nebula Logger, or due to configuration issues within your org. Regardless of the root cause, here are some useful steps in trying to debug and resolve the issues.
 
+```mermaid
+flowchart TD
+    START["Log entries aren't appearing as expected"] --> Q1{"Are LogEntryEvent__e<br/>platform events being published?"}
+    Q1 -->|No| LIMITS["Run Apex script to check org limits:<br/>HourlyPublishedStandardVolumePlatformEvents,<br/>HourlyPublishedPlatformEvents,<br/>DailyStandardVolumePlatformEvents,<br/>MonthlyPlatformEventsUsageEntitlement"]
+    LIMITS --> EXCEEDED["Likely cause: platform event<br/>allocations have been exceeded"]
+    Q1 -->|Yes| Q2{"Are Log__c / LogEntry__c<br/>records created?"}
+    Q2 -->|"No records, or Log__c<br/>with no related LogEntry__c"| ASYNC["Likely cause: async conversion of<br/>LogEntryEvent__e into Log__c/LogEntry__c<br/>is failing silently (runs as 'Automated Process' user)"]
+    ASYNC --> SYNC["Fix: set LoggerSettings__c Default Save Method<br/>to SYNCHRONOUS_DML to surface the error"]
+    SYNC --> REVERT["Once root cause is found, revert<br/>Default Save Method back to EVENT_BUS"]
+```
+
 ## LogEntryEvent__e Platform Events Are Not Published
 
 Logger uses a [platform event](https://developer.salesforce.com/docs/atlas.en-us.232.0.platform_events.meta/platform_events/platform_events_intro.htm) object called `LogEntryEvent__e` to handle creating log entries. Just like other features within Salesforce, platform events have some limits, including daily limits on how many platform events can be created/published. If your org is no longer publishing `LogEntryEvent__e` records, you may have exceeded one or more of [the platform events allocations](https://developer.salesforce.com/docs/atlas.en-us.232.0.platform_events.meta/platform_events/platform_event_limits.htm).

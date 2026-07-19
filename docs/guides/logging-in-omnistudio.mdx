@@ -16,6 +16,18 @@ The `CallableLogger` class can be configured as a remote action in:
 
 Depending on which action you call, some additional inputs may be required. For details on available actions and their required inputs, see [the list of available actions](./Dynamically-Call-Nebula-Logger#available-actions) in the `CallableLogger` Apex class documentation.
 
+```mermaid
+sequenceDiagram
+    participant OS as OmniScript / Integration Procedure
+    participant RA as Remote Action
+    participant CL as CallableLogger
+
+    OS->>RA: Remote Action element (Remote Class = CallableLogger)
+    RA->>CL: call(Remote Method, Extra Payload / Additional Input)
+    CL-->>RA: logging result
+    RA-->>OS: continue OmniStudio flow
+```
+
 ## Logging in OmniScripts
 
 To add logging to an OmniScript:

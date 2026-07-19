@@ -12,6 +12,17 @@ Nebula Logger is available as both a [2GP unlocked package](https://developer.sa
 In general, the unlocked package is typically recommended - but both options have their pros & cons. For many teams, using the managed package is the better choice - selecting the right choice for your team will depend on things like your org's existing metadata, how much control you want over Nebula Logger's metadata, and if certain features are critical for your team.
 </Panel>
 
+```mermaid
+flowchart TD
+    START["Choosing a package format"] --> Q1{"Existing metadata in your org<br/>with 'Log' in the API name?"}
+    Q1 -->|Yes, collision risk| MANAGED["Managed Package<br/>Nebula namespace avoids collisions"]
+    Q1 -->|No collision risk| Q2{"Need the Logger Plugin Framework?"}
+    Q2 -->|Yes| UNLOCKED["Unlocked Package"]
+    Q2 -->|No| Q3{"Want full visibility & edit access<br/>to all metadata/Apex classes?"}
+    Q3 -->|Yes| UNLOCKED
+    Q3 -->|No, prefer stability & obfuscation| MANAGED
+```
+
 ## Comparison
 
 | | Unlocked Package (Recommended) | Managed Package |

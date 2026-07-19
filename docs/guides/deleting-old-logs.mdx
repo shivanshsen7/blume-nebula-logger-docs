@@ -8,6 +8,20 @@ sidebar:
 
 Nebula Logger provides two straightforward methods to remove old logs: manual deletion through list views or automated cleanup using Apex batch jobs.
 
+```mermaid
+flowchart TD
+    A["Remove old logs"] --> B{"Manual or automated?"}
+    B -->|Manual| C["Select Log__c records in a list view"]
+    C --> D["Click custom mass delete button"]
+    D --> E["Confirm via LogMassDelete Visualforce page"]
+    E --> F["Records deleted"]
+    B -->|Automated| G["LogBatchPurgeScheduler schedules<br/>LogBatchPurger daily or weekly"]
+    G --> H["LogBatchPurger batch job runs"]
+    H --> I{"Log__c.LogRetentionDate__c <= System.today()?<br/>(default: TODAY + 14 DAYS, configurable via LoggerSettings__c)"}
+    I -->|Yes| F
+    I -->|"No (or manually set to null)"| J["Log retained"]
+```
+
 ## Mass Deleting with List Views
 
 Salesforce does not natively support mass deletion out-of-the-box—despite an open feature idea for over a decade. Nebula Logger bridges this gap with a custom button available on `Log__c` list views.

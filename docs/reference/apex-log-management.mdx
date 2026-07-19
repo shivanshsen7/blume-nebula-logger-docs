@@ -6,6 +6,22 @@ sidebar: { label: "Log Management", order: 2 }
 
 The Log Management module contains the Apex classes that run after log data has been captured — the trigger handlers that populate `Log__c`/`LogEntry__c`/related object fields, the selector class used for all log-management queries, the batch/scheduled purge jobs that clean up old logs, and the Apex controllers behind the Nebula Logger LWCs (log viewer, settings UI, related log entries, admin home page, etc.).
 
+```mermaid
+flowchart TD
+    subgraph Capture["Trigger Handlers"]
+        EVT["LogEntryEvent__e"] --> HANDLERS["LoggerSObjectHandler subclasses<br/>LogHandler, LogEntryHandler, LogEntryTagHandler,<br/>LoggerTagHandler, LoggerScenarioHandler, LogEntryEventHandler"]
+        HANDLERS --> RECORDS["Log__c / LogEntry__c / related records"]
+    end
+    RECORDS -->|"LogRetentionDate__c reached"| PURGER
+    subgraph Purge["Batch / Scheduled Purge"]
+        SCHED["LogBatchPurgeScheduler"] --> PURGER["LogBatchPurger"]
+        PURGER -->|"chains: LogEntryTag__c to LogEntry__c to Log__c"| DELETED["records deleted"]
+    end
+    CTRL["LogBatchPurgeController"] -.->|"manual run"| PURGER
+    SEL["LogManagementDataSelector"] -.->|"queries"| RECORDS
+    LWC["LWC Controllers<br/>LogViewerController, RelatedLogEntriesController, etc."] -.->|"uses"| SEL
+```
+
 ## LogManagementDataSelector
 
 Selector class used for all SOQL queries that are specific to the log management layer. It's accessed as a singleton via `getInstance()` and exposes a large set of read-only query methods for logs, log entries, tags, scenarios, and related Salesforce metadata (users, profiles, queues, Apex classes/triggers, flows, async jobs, topics).
