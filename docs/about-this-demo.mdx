@@ -17,9 +17,11 @@ It is **not** affiliated with, endorsed by, or produced by the maintainers of Ne
 
 This is not a replacement for the official documentation. For anything authoritative — installation, releases, issues, the full wiki — go straight to the source:
 
+<GithubInfo owner="jongpie" repo="NebulaLogger" />
+
 <CardGroup cols={2}>
   <Card title="Nebula Logger on GitHub" href="https://github.com/jongpie/NebulaLogger" icon="github">
-    The real repository — 935+ stars, actively maintained by Jonathan Gillespie and contributors.
+    The real repository, actively maintained by Jonathan Gillespie and contributors.
   </Card>
   <Card title="Official docs" href="https://jongpie.github.io/NebulaLogger/" icon="book">
     The maintainer's own documentation site.
@@ -34,11 +36,33 @@ Nebula Logger itself is 100% free and open source. If your team ends up using it
 
 ## How this was built
 
-1. Pulled the real Nebula Logger README and public docs as raw source material
-2. Reorganized it around three audiences — developers, admins, and architects — instead of one long linear page, since that's how Salesforce teams actually divide up this kind of work
-3. Ran `npx blume init`, dropped the content in as `.mdx` files, and used Blume's built-in `Tabs`, `CodeGroup`, `CardGroup`, and `Panel` components with zero custom components written
-4. Built and deployed as a static site — no server, no CMS, no ongoing maintenance beyond editing Markdown
+<Steps>
+  <Step title="Pulled the real source">
+    The real Nebula Logger README, wiki, and public docs, cloned locally as raw source material.
+  </Step>
+  <Step title="Reorganized around three audiences">
+    Developers, admins, and architects, instead of one long linear page — that's how Salesforce teams actually divide up this kind of work.
+  </Step>
+  <Step title="Built with Blume">
+    Ran `npx blume init`, dropped the content in as `.mdx` files, and used Blume's built-in `Tabs`, `CodeGroup`, `CardGroup`, `Panel`, `TypeTable`, and `GithubInfo` components with zero custom components written.
+  </Step>
+  <Step title="Deployed as a static site">
+    No server, no CMS, no ongoing maintenance beyond editing Markdown.
+  </Step>
+</Steps>
 
 <Panel>
   Every page on this site is also available as raw Markdown at its URL plus `.md`, and the whole site has an auto-generated `llms.txt` for AI agents. That's a Blume default, not something built for this demo — try appending `.md` to this page's URL.
 </Panel>
+
+## A published mistake, fixed in the open
+
+The first version of this site's README overstated two numbers. Both were caught by independent review after publishing, not before:
+
+<Diff
+  lang="md"
+  old={`Nebula Logger's docs, rebuilt as 40 structured pages\nvia a 33-agent fan-out — 148 Apex classes, 26 wiki\npages, MIT licensed.`}
+  new={`Nebula Logger's docs, rebuilt as 39 structured pages\nvia a 33-agent fan-out — 53 Apex classes, 26 wiki\npages, MIT licensed.`}
+/>
+
+39 pages is the real count (6 start-here + 26 guides + 7 reference). 53 Apex classes is the real count, verified by cloning the actual project and counting its own generated ApexDocs output module by module — the 148 figure had never been checked against anything before it shipped. The commit that fixed both is public, same as the mistake was.

@@ -61,15 +61,49 @@ One `Log__c` record per logged transaction; acts as the parent/summary record fo
 - `SessionSecurityLevel__c`
 - `SourceIp__c`
 
-**Status / lifecycle**
-- `Status__c`
-- `IsClosed__c`
-- `IsResolved__c`
-- `ClosedBy__c`
-- `ClosedDate__c`
-- `Priority__c`
-- `LogRetentionDate__c`
-- `LogPurgeAction__c`
+**Status / lifecycle** (verified against the real object's field metadata)
+
+<TypeTable
+  type={{
+    "Status__c": {
+      type: "Picklist",
+      default: '"New"',
+      description: "New, Ignored, On Hold, In Progress, or Done.",
+    },
+    "IsClosed__c": {
+      type: "Checkbox",
+      default: "false",
+      description: "Auto-set from Status__c via the LogStatus__mdt mapping.",
+    },
+    "IsResolved__c": {
+      type: "Checkbox",
+      default: "false",
+      description: "Auto-set alongside IsClosed__c when the closed status is also configured as resolved.",
+    },
+    "ClosedBy__c": {
+      type: "Lookup(User)",
+      description: "Auto-populated when the log is closed.",
+    },
+    "ClosedDate__c": {
+      type: "DateTime",
+      description: "Auto-populated when the log is closed.",
+    },
+    "Priority__c": {
+      type: "Picklist",
+      default: '"Low"',
+      description: "High, Medium, or Low.",
+    },
+    "LogRetentionDate__c": {
+      type: "Date",
+      description: "The date this log can be automatically deleted by LogBatchPurger.",
+    },
+    "LogPurgeAction__c": {
+      type: "Picklist",
+      default: '"Delete"',
+      description: "What LogBatchPurger does once LogRetentionDate__c has passed. Only Delete ships out of the box; plugins can add more.",
+    },
+  }}
+/>
 
 **Scenario & tagging summary**
 - `Scenario__c`
