@@ -4,11 +4,10 @@ export default defineConfig({
   title: "Nebula Logger Docs (Blume Demo)",
   description:
     "An unofficial docs-site rebuild of Nebula Logger for Salesforce, built with Blume to showcase zero-config, AI-ready documentation for the Salesforce ecosystem.",
-  // Fill in once you create the GitHub repo, e.g.:
-  // deployment: {
-  //   site: "https://<your-username>.github.io/nebula-logger-blume-demo",
-  //   base: "/nebula-logger-blume-demo",
-  // },
+  deployment: {
+    site: "https://shivanshsen7.github.io/blume-nebula-logger-docs",
+    base: "/blume-nebula-logger-docs",
+  },
   navigation: {
     sidebar: [
       "/",

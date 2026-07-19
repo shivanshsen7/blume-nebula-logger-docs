@@ -2,7 +2,7 @@
 
 A fan-made, unofficial docs site for [Nebula Logger](https://github.com/jongpie/NebulaLogger) (the popular open-source Salesforce observability framework), rebuilt from scratch with [Blume](https://useblume.dev) — a zero-config, AI-ready documentation framework.
 
-**Live demo:** _(add your GitHub Pages URL here once deployed)_
+**Live demo:** https://shivanshsen7.github.io/blume-nebula-logger-docs/
 
 ## Why this exists
 
