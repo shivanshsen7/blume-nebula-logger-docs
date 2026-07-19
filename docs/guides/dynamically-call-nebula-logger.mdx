@@ -1,0 +1,260 @@
+---
+title: Dynamically Call Nebula Logger
+description: Use the Callable interface to optionally leverage Nebula Logger in packages and apps when it's available, with graceful fallback when it isn't.
+sidebar:
+  label: Dynamic Calling
+  order: 24
+---
+
+## Overview
+
+As of `v4.14.10`, Nebula Logger supports dynamic calling through the `CallableLogger` class, which implements [Apex's `Callable` interface](https://developer.salesforce.com/docs/atlas.en-us.apexref.meta/apexref/apex_interface_System_Callable.htm). This enables ISVs and package developers to optionally leverage Nebula Logger for logging when it's available in a customer's org, while still allowing their package to be installed and used when it isn't.
+
+The `Callable` interface provides a single method with a loose-coupling mechanism:
+```
+Object call(String action, Map<String,Object> args)
+```
+
+This string-based action system and generic `Object` values allow Nebula Logger to be referenced without a hard dependency on the package being present.
+
+## Quick Start
+
+Instantiate the `CallableLogger` dynamically and check for availability:
+
+```apex
+// Check if Nebula Logger is available in the org
+Type nebulaLoggerCallableType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
+Callable nebulaLoggerCallable = (Callable) nebulaLoggerCallableType?.newInstance();
+if (nebulaLoggerCallable == null) {
+  // Nebula Logger isn't available, so exit early
+  // You could also implement a fallback logging tool or use System.debug()
+  return;
+}
+
+// Nebula Logger is available, so use it to log
+nebulaLoggerCallable.call('someAction', new Map<String, Object>());
+```
+
+Here's a complete example that adds two log entries and saves them:
+
+```apex
+Type nebulaLoggerCallableType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
+Callable nebulaLoggerCallable = (Callable) nebulaLoggerCallableType?.newInstance();
+if (nebulaLoggerCallable == null) {
+  return;
+}
+
+// Add an INFO entry
+Map<String, Object> infoEntryInput = new Map<String, Object>{
+  'loggingLevel' => System.LoggingLevel.INFO,
+  'message' => 'hello, world!'
+};
+nebulaLoggerCallable.call('newEntry', infoEntryInput);
+
+// Add an ERROR entry with an exception
+Exception someException = new DmlException('oops');
+Map<String, Object> errorEntryInput = new Map<String, Object>{
+  'exception' => someException,
+  'loggingLevel' => LoggingLevel.ERROR,
+  'message' => 'An unexpected exception was thrown'
+};
+nebulaLoggerCallable.call('newEntry', errorEntryInput);
+
+// Save pending log entries
+nebulaLoggerCallable.call('saveLog', null);
+```
+
+## Input & Output Handling
+
+### Inputs
+
+The `Callable` interface's `call()` method accepts an `args` map as its second parameter. Not all actions require input—for those, pass `null` instead of an empty map:
+
+```apex
+// Required input example
+Map<String, Object> input = new Map<String, Object>{
+  'loggingLevel' => System.LoggingLevel.INFO,
+  'message' => 'hello, world!'
+};
+nebulaLoggerCallable.call('newEntry', input);
+
+// No input required—pass null
+nebulaLoggerCallable.call('saveLog', null);
+
+// Optional input example
+Map<String, Object> saveWithMethod = new Map<String, Object>{
+  'saveMethodName' => 'SYNCHRONOUS_DML'
+};
+nebulaLoggerCallable.call('saveLog', saveWithMethod);
+```
+
+### Outputs
+
+All actions return a `Map<String, Object>`. Cast the returned value to inspect results:
+
+```apex
+Map<String, Object> output = (Map<String, Object>) nebulaLoggerCallable.call('getTransactionId', null);
+System.debug('Transaction ID: ' + (String) output.get('transactionId'));
+```
+
+**Success responses** include:
+- `isSuccess` = `true`
+- Additional keys depending on the action (documented per action below)
+
+**Error responses** (for catchable exceptions) include:
+- `isSuccess` = `false`
+- `exceptionMessage` — the exception message
+- `exceptionStackTrace` — the full stack trace
+- `exceptionType` — the exception type name
+
+**All responses** (as of `v4.14.16`) also include:
+- `transactionId` — the current transaction ID
+- `parentLogTransactionId` — the parent transaction ID (or `null`)
+- `requestId` — the Salesforce request ID
+
+<Panel>
+**OmniStudio Support**
+
+As of Salesforce Summer '21, OmniScripts and Integration Procedures support the `Callable` interface via remote actions. `CallableLogger` works seamlessly in both Apex and OmniStudio environments—the same actions and inputs are available in both contexts.
+</Panel>
+
+## Available Actions
+
+### `newEntry`
+
+Adds a new log entry. Equivalent to `Logger.error()`, `Logger.warn()`, `Logger.info()`, `Logger.debug()`, `Logger.fine()`, `Logger.finer()`, `Logger.finest()`, or `Logger.newEntry()`.
+
+**Input Map Keys:**
+
+| Key | Required | Datatype | Notes |
+|-----|----------|----------|-------|
+| `loggingLevel` | ✓ | `String` or `System.LoggingLevel` | The log level |
+| `message` | ✓ | `String` | The log message |
+| `exception` | | `System.Exception` | Cannot be used with `record`, `recordList`, or `recordMap` |
+| `parentLogTransactionId` | | `String` | Sets the parent log transaction ID before creating the entry |
+| `recordId` | | `Id` | Ties the entry to a specific record ID |
+| `record` | | `SObject` | Ties the entry to a record and stores a JSON copy |
+| `recordList` | | `List<SObject>` | Stores a JSON copy of the list |
+| `recordMap` | | `Map<Id, SObject>` | Stores a JSON copy of the map |
+| `saveLog` | | `Boolean` | When `true`, saves pending entries immediately (default: `false`) |
+| `tags` | | `List<String>` | Tags to associate with the entry |
+
+**Example:**
+
+```apex
+User currentUser = [SELECT Id, Name FROM User WHERE Id = :UserInfo.getUserId()];
+Exception someException = new DmlException('oops');
+
+Map<String, Object> newEntryInput = new Map<String, Object>{
+  'exception' => someException,
+  'loggingLevel' => LoggingLevel.ERROR,
+  'message' => 'An unexpected exception was thrown',
+  'record' => currentUser 
+};
+Callable nebulaLoggerCallable = (Callable) System.Type.forName('CallableLogger')?.newInstance();
+nebulaLoggerCallable?.call('newEntry', newEntryInput);
+```
+
+### `saveLog`
+
+Saves any pending log entries. Equivalent to `Logger.saveLog()`.
+
+**Input Map Keys:**
+
+| Key | Required | Datatype | Notes |
+|-----|----------|----------|-------|
+| `saveMethodName` | | `String` | The save method to use (e.g., `'SYNCHRONOUS_DML'`). If not provided, uses `LoggerSettings__c.DefaultSaveMethod__c` |
+
+**Example:**
+
+```apex
+Callable nebulaLoggerCallable = (Callable) System.Type.forName('CallableLogger')?.newInstance();
+
+// Save using default method
+nebulaLoggerCallable?.call('saveLog', null);
+
+// Save using a specific method
+nebulaLoggerCallable?.call('saveLog', new Map<String, Object>{ 'saveMethodName' => 'SYNCHRONOUS_DML' });
+```
+
+### `getTransactionId`
+
+Returns the current transaction ID. Equivalent to `Logger.getTransactionId()`.
+
+**Output:** `transactionId` (String)
+
+```apex
+Map<String, Object> output = (Map<String, Object>) nebulaLoggerCallable?.call('getTransactionId', null);
+System.debug('Transaction ID: ' + (String) output.get('transactionId'));
+```
+
+### `getParentLogTransactionId`
+
+Returns the parent log transaction ID, if set. Equivalent to `Logger.getParentLogTransactionId()`.
+
+**Output:** `parentLogTransactionId` (String)
+
+```apex
+Map<String, Object> output = (Map<String, Object>) nebulaLoggerCallable?.call('getParentLogTransactionId', null);
+System.debug('Parent Transaction ID: ' + (String) output.get('parentLogTransactionId'));
+```
+
+### `setParentLogTransactionId`
+
+Sets the parent log transaction ID. Equivalent to `Logger.setParentLogTransactionId(String)`.
+
+**Input Map Keys:**
+
+| Key | Required | Datatype |
+|-----|----------|----------|
+| `parentLogTransactionId` | ✓ | `String` |
+
+```apex
+Map<String, Object> input = new Map<String, Object>{ 'parentLogTransactionId' => 'some-transaction-id' };
+nebulaLoggerCallable?.call('setParentLogTransactionId', input);
+```
+
+### `getScenario`
+
+Returns the current scenario for scenario-based logging. Equivalent to `Logger.getScenario()`.
+
+**Output:** `scenario` (String)
+
+```apex
+Map<String, Object> output = (Map<String, Object>) nebulaLoggerCallable?.call('getScenario', null);
+System.debug('Current scenario: ' + (String) output.get('scenario'));
+```
+
+### `setScenario`
+
+Sets the scenario for scenario-based logging. Equivalent to `Logger.setScenario(String)`.
+
+**Input Map Keys:**
+
+| Key | Required | Datatype |
+|-----|----------|----------|
+| `scenario` | ✓ | `String` |
+
+```apex
+Map<String, Object> input = new Map<String, Object>{ 'scenario' => 'some scenario' };
+nebulaLoggerCallable?.call('setScenario', input);
+```
+
+### `endScenario`
+
+Ends the current scenario for scenario-based logging. Equivalent to `Logger.endScenario(String)`.
+
+**Input Map Keys:**
+
+| Key | Required | Datatype |
+|-----|----------|----------|
+| `scenario` | ✓ | `String` |
+
+```apex
+Map<String, Object> input = new Map<String, Object>{ 'scenario' => 'some scenario' };
+nebulaLoggerCallable?.call('endScenario', input);
+```
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Dynamically-Call-Nebula-Logger), © Jonathan Gillespie and contributors, MIT License.*

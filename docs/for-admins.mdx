@@ -1,0 +1,43 @@
+---
+title: For Admins
+description: Log from Flow and Process Builder with zero code, using Nebula Logger's invocable actions.
+sidebar:
+  label: For Admins
+  icon: wand
+  order: 3
+---
+
+You don't need to write Apex to get observability into your automations. Nebula Logger ships four invocable actions that drop straight into Flow Builder.
+
+## The four invocable actions
+
+<CardGroup cols={2}>
+  <Card title="Add Log Entry" icon="file-text">
+    Log a plain message from anywhere in a Flow.
+  </Card>
+  <Card title="Add Log Entry for a Record" icon="file-text">
+    Log a message tied to a specific `SObject` record.
+  </Card>
+  <Card title="Add Log Entry for a Record Collection" icon="files">
+    Log one message against a whole collection of records in a loop-free way.
+  </Card>
+  <Card title="Save Log" icon="save">
+    Persist everything logged so far in this Flow interview.
+  </Card>
+</CardGroup>
+
+## Why admins care
+
+Flows fail silently more often than anyone would like — a bad record update, a failed callout, an unmet entry condition. Wiring in a **Save Log** action at key decision points turns "the Flow just didn't work" into a queryable `Log__c` record your team can actually look at, filter, and report on.
+
+<Panel>
+  Because Nebula Logger writes to the same `Log__c` / `LogEntry__c` objects regardless of whether the entry came from Apex, LWC, or Flow, admins and developers end up debugging from the *same* data — no separate admin-only or dev-only logging silo.
+</Panel>
+
+## Tagging from Flow
+
+Tags don't require Apex either — specify a comma-separated list directly in the **Tags** input of any logging action, for example `billing, retry-eligible`. See [Tagging & Data](/tagging-and-data) for how tags and custom metadata rules work together.
+
+## Where the data lives
+
+Every Flow log entry lands in the same Logger Console app as Apex and LWC logs — no separate admin tooling to learn. From there you get list views, a related-records component for record pages, and a JSON view for anything that needs deeper inspection.

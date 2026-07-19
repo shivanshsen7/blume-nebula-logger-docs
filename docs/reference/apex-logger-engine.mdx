@@ -1,0 +1,109 @@
+---
+title: "Apex Reference — Logger Engine"
+description: "Public Apex classes that make up Nebula Logger's core logging engine — the Logger facade, its builders, Flow actions, and internal data/selector utilities."
+sidebar: { label: "Logger Engine", order: 1 }
+---
+
+The **Logger Engine** module is the heart of Nebula Logger — it contains the `Logger` class that Apex developers call to create log entries, the builder and support classes it delegates to, the invocable actions used from Flow, and a handful of internal helper/selector classes that keep the engine's data access and caching centralized.
+
+## Logger
+
+The core, static entry-point class for logging from Apex. Nearly all logging starts with a call to `Logger`, which creates buffered `LogEntryEventBuilder` instances (via level-specific methods like `debug()`/`info()`/`warn()`/`error()`/`fine()`/`finer()`/`finest()`) and later flushes them to `LogEntryEvent__e` platform events with `saveLog()`.
+
+For each logging level (`debug`, `info`, `warn`, `error`, `fine`, `finer`, `finest`), `Logger` exposes a large family of near-identical overloads accepting a `String` or `LogMessage`, plus an optional related record (`Id`, `SObject`, `List<SObject>`) or DML/database result (`Database.SaveResult`, `DeleteResult`, `UpsertResult`, `MergeResult`, `UndeleteResult`, `LeadConvertResult`, `EmptyRecycleBinResult`, single or list form) — every variant returns the new entry's `LogEntryEventBuilder` for chaining. `error()` additionally has `exception(...)` overloads that log at ERROR and then re-throw the given exception, and a matching family of `logDatabaseErrors(LoggingLevel, message, results)` overloads that only log the failed entries in a DML results list.
+
+| Method (representative signature) | Description |
+| --- | --- |
+| `debug/info/warn/error/fine/finer/finest(LogMessage\|String message, ...optional record/result)` → `LogEntryEventBuilder` | Creates a buffered log entry at the matching `LoggingLevel`; overloads let you attach a record, record ID, or DML/database result |
+| `exception(LogMessage\|String message, ...optional record, System.Exception apexException)` → `void` | Logs an ERROR entry, saves the log, then re-throws `apexException` |
+| `logDatabaseErrors(LoggingLevel level, LogMessage\|String message, List<Database.*Result> results)` → `LogEntryEventBuilder` | Logs only the failed results (`isSuccess() != true`) from a DML results list |
+| `newEntry(LoggingLevel loggingLevel, LogMessage\|String message, Boolean shouldSave)` → `LogEntryEventBuilder` | Lower-level entry point used internally by the level-specific methods to add a builder to the buffer |
+| `saveLog()` / `saveLog(SaveMethod saveMethod)` / `saveLog(String saveMethodName)` → `void` | Saves (flushes) all buffered log entries, optionally overriding the save method for just that call |
+| `flushBuffer()` → `void` | Discards any buffered entries without saving them |
+| `getBufferSize()` → `Integer` | Returns the number of buffered, unsaved entries |
+| `suspendSaving()` / `resumeSaving()` / `isSavingSuspended()` → `void`/`void`/`Boolean` | Temporarily disables `saveLog()` for the transaction, then re-enables it |
+| `setScenario(String scenario)` / `getScenario()` / `endScenario(String scenario)` | Sets, reads, or ends the current transaction's "scenario" grouping label |
+| `setSaveMethod(SaveMethod saveMethod)` / `getSaveMethod()` → `void`/`SaveMethod` | Sets or reads the default save method (e.g., `EVENT_BUS`, synchronous) used by `saveLog()` |
+| `setParentLogTransactionId(String parentTransactionId)` / `getParentLogTransactionId()` | Relates the current transaction's log to a parent log, useful for linking async job chains |
+| `setAsyncContext(Database.BatchableContext\|FinalizerContext\|QueueableContext\|SchedulableContext context)` → `void` | Records details about the current batch/queueable/finalizer/schedulable async context |
+| `setField(Schema.SObjectField field, Object value)` / `setField(Map<Schema.SObjectField,Object> fieldToValue)` → `void` | Sets one or more custom field values on every log entry generated for the rest of the transaction |
+| `isEnabled()` / `isDebugEnabled()` / `isInfoEnabled()` / `isWarnEnabled()` / `isErrorEnabled()` / `isFineEnabled()` / `isFinerEnabled()` / `isFinestEnabled()` / `isEnabled(LoggingLevel)` → `Boolean` | Checks whether logging (overall, or at a specific level) is enabled for the current user |
+| `meetsUserLoggingLevel(LoggingLevel logEntryLoggingLevel)` → `Boolean` | Checks if a given level is at or above the current user's configured logging level |
+| `getUserLoggingLevel()` / `getUserSettings()` / `getUserSettings(Schema.User)` | Returns the current (or specified) user's effective logging level / `LoggerSettings__c` record |
+| `getTransactionId()` / `getRequestId()` / `getCurrentQuiddity()` / `getNamespacePrefix()` / `getOrganizationApiVersion()` / `getVersionNumber()` | Read-only accessors for transaction/org/package metadata used on log records |
+| `ignoreOrigin(System.Type apexType)` → `void` | Excludes the specified Apex type from stack traces/origin detection for the transaction |
+| `createSettings()` → `LoggerSettings__c` | Internal helper that builds a new, unsaved `LoggerSettings__c` record |
+| `callStatusApi()` → `StatusApiResponse` | Internal helper that calls Salesforce's public status API for org release details |
+
+## LogEntryEventBuilder
+
+Builder class, returned by nearly every `Logger` method, that constructs a single `LogEntryEvent__e` record. It exposes a fluent API for attaching extra context to a log entry before it is saved, plus internal governor-limit and data-masking properties used when populating the platform event.
+
+| Method | Description |
+| --- | --- |
+| `setMessage(String\|LogMessage message)` → `LogEntryEventBuilder` | Sets the entry's message field |
+| `setRecord(Id recordId \| SObject record \| List<SObject> records \| Map<Id,SObject> recordIdToRecord \| Iterable<Id> recordIds)` → `LogEntryEventBuilder` | Relates the entry to one or more records, automatically attaching their JSON |
+| `setField(Schema.SObjectField field, Object value)` / `setField(Map<Schema.SObjectField,Object> fieldToValue)` → `LogEntryEventBuilder` | Sets one or more custom field values directly on this entry |
+| `addTag(String tag)` / `addTags(List<String> tags)` → `LogEntryEventBuilder` | Appends one or more tags to the entry |
+| `setExceptionDetails(System.Exception apexException)` → `LogEntryEventBuilder` | Populates the entry's exception-related fields |
+| `setDatabaseResult(Database.DeleteResult\|SaveResult\|UpsertResult\|UndeleteResult\|MergeResult\|LeadConvertResult\|EmptyRecycleBinResult result)` (single or `List<...>`) → `LogEntryEventBuilder` | Populates the entry's DML result fields from any Database operation result type |
+| `setApprovalResult(Approval.LockResult\|ProcessResult\|UnlockResult result)` (single or `List<...>`) → `LogEntryEventBuilder` | Populates the entry's fields from an Approval process/lock/unlock result |
+| `setHttpRequestDetails(System.HttpRequest request, List<String> headersToLog)` / `setHttpResponseDetails(System.HttpResponse response)` → `LogEntryEventBuilder` | Logs outbound HTTP request/response details |
+| `setRestRequestDetails(System.RestRequest request)` / `setRestResponseDetails(System.RestResponse response)` → `LogEntryEventBuilder` | Logs inbound REST request/response details |
+| `parseStackTrace(String stackTraceString)` → `LogEntryEventBuilder` | Parses an Apex stack trace string and sets the entry's origin/stack trace fields |
+| `getLogEntryEvent()` → `LogEntryEvent__e` | Returns the underlying, populated `LogEntryEvent__e` record |
+| `shouldSave()` → `Boolean` | Indicates whether this entry will be saved on the next `Logger.saveLog()` |
+
+## LoggerStackTrace
+
+Parses and tracks Apex stack traces so log entries can record an accurate origin location. Constructors can build a trace automatically from the calling code, or parse one from a supplied `Exception` or stack trace `String`. Exposes `Language`, `Location`, `ParsedStackTraceString`, and `Source` properties (plus a `SourceMetadata` inner class with `ActionName`, `ApiName`, `LineNumber`, `MetadataType`), and the static `ignoreOrigin(System.Type apexType)` method to exclude a class from origin detection.
+
+## LogMessage
+
+A small utility for building log messages on demand using `String.format()`-style placeholder substitution, so string concatenation only happens if the entry will actually be logged. Constructors accept an unformatted message plus 1, 2, or 3 replacement values, or a `List<Object>` of replacement values; `getMessage()` returns the final formatted `String`.
+
+```java
+String formattedMessage = new LogMessage('Today is {0}', System.today()).getMessage();
+```
+
+## LoggerDataStore
+
+Central class for the engine's data-layer operations — DML, platform event publishing, and enqueueing queueable jobs — accessed via singleton getters `getDatabase()`, `getEventBus()`, and `getJobQueue()`. It also exposes the static helper `truncateFieldValue(Schema.SObjectField field, String value)` to shorten a string to a field's max length.
+
+| Inner class | Description |
+| --- | --- |
+| `LoggerDataStore.Database` | Centralizes DML: `insertRecord(s)`, `updateRecord(s)`, `upsertRecord(s)`, `deleteRecord(s)`, `undeleteRecord(s)`, and `hardDeleteRecord(s)`, each with single-record and list overloads (some also accepting `allOrNone` or `Database.DmlOptions`) |
+| `LoggerDataStore.EventBus` | Publishes platform events via `publishRecord(SObject)` and `publishRecords(List<SObject>)` |
+| `LoggerDataStore.JobQueue` | Enqueues async work via `enqueueJob(System.Queueable queueableJob)` |
+
+## FlowLogger, FlowLogEntry, FlowRecordLogEntry, FlowCollectionLogEntry
+
+These classes expose Nebula Logger to Flow and Process Builder as invocable actions. `FlowLogEntry` logs a general entry optionally related to a single record ID; `FlowRecordLogEntry` relates the entry to a full `SObject` record; `FlowCollectionLogEntry` relates it to a list of `SObject` records; `FlowLogger` holds the shared logic (and an inner `LogEntry` wrapper with an `addToLoggerBuffer()` method) used internally by the other three. All three invocable classes share the same set of input properties — `message`, `flowName`, `loggingLevelName`, `scenario`, `saveLog`, `saveMethodName`, `tagsString`, `topics`, `timestamp`, `faultMessage`, and `shouldThrowFaultMessageException` — differing only in how they relate to record data (`recordId`, `record`, or `records`), and each exposes a single invocable method (`addFlowEntries`, `addFlowRecordEntries`, `addFlowCollectionEntries`, `addEntries`) that returns the current transaction's ID(s).
+
+## ComponentLogger
+
+Apex controller class backing the `logger` Lightning web component, bridging LWC/Aura-based logging into the same engine. `getSettings()` returns a `ComponentLoggerSettings` DTO describing `LoggerSettings__c` and server-supported logging details for the current user, and `saveComponentLogEntries(List<ComponentLogEntry> componentLogEntries, String saveMethodName)` saves log entries created in components, returning the transaction ID. Its DTO inner classes (`ComponentBrowserContext`, `ComponentError`, `ComponentLogEntry`, `ComponentLoggerSettings`, `ComponentLoggingLevel`, `ComponentStackTrace`) carry browser, error, stack trace, and settings data between the client and Apex.
+
+## CallableLogger
+
+Implements the standard `System.Callable` interface, giving external packages (e.g., ISVs) and tools like OmniStudio OmniScripts/Integration Procedures a loosely-coupled, string-based way to invoke Nebula Logger without a compile-time dependency. Its `call(String action, Map<String, Object> arguments)` method dispatches to the named `Logger` method and returns its result (or `null` for void methods); `handleCall(...)` is the lower-level dispatch handler.
+
+## LoggerSObjectHandler
+
+Abstract base class shared by Nebula Logger's `SObject` trigger handlers. `execute()` runs the handler's logic plus any configured plugins, `getSObjectType()` returns the `SObjectType` it manages, the static `getHandler(Schema.SObjectType sobjectType, [LoggerSObjectHandler defaultImplementation])` resolves the configured handler implementation for a given object type, and `overrideTriggerableContext(LoggerTriggerableContext input)` lets callers substitute the trigger context for testing or custom control flow.
+
+## LoggerEngineDataSelector
+
+Singleton selector class (`getInstance()`) that centralizes all SOQL specific to the logger engine layer, with several results cached via `LoggerCache`. Provides `getCachedUser()`, `getCachedOrganization()`, `getCachedAuthSessionProxy()`, and `getCachedNetworkProxy(Id networkId)` for single cached lookups of the current user/org/session/network, plus bulk variants `getUsers(List<Id> userIds)`, `getAuthSessionProxies(List<Id> userIds)`, and `getNetworkProxies(List<Id> networkIds)` that return maps keyed by record ID.
+
+## LoggerCache
+
+Small utility class for caching selector query results within a transaction. `getTransactionCache()` returns the singleton `TransactionCache` inner class instance, which exposes `contains(String keyName)`, `get(String keyName)`, and `put(String keyName, Object valueToCache)` for simple key-based caching.
+
+## LoggerSObjectProxy
+
+Proxy/DTO layer that substitutes for `SObject` types that are awkward to work with directly in Apex — read-only objects that can't be mocked (`Schema.AuthSession`, `Schema.LoginHistory`) or objects that don't exist in every org (`Schema.Network`, `Schema.OmniProcess`). Each inner class (`AuthSession`, `LoginHistory`, `Network`, `OmniProcess`) mirrors the fields of its real counterpart as plain properties, and the outer class exposes a `serialize()` method.
+
+---
+
+*Generated from the real Nebula Logger Apex reference docs (ApexDocs output), © Jonathan Gillespie and contributors, MIT License. See the [full class reference on GitHub](https://github.com/jongpie/NebulaLogger/tree/main/docs/apex/Logger Engine) for exhaustive detail.*

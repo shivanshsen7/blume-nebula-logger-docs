@@ -1,0 +1,66 @@
+---
+title: Configuring Data Mask Rules
+description: Automatically mask sensitive data like credit card numbers and SSNs in log entries.
+sidebar:
+  label: Data Mask Rules
+  order: 13
+---
+
+Nebula Logger can automatically mask sensitive data—such as credit card numbers and social security numbers—within fields that may contain sensitive information. This feature provides compliance-friendly logging without requiring manual data filtering.
+
+## Masked Fields
+
+Data masking is applied to the following `LogEntryEvent__e` platform event fields, and the corresponding fields on `LogEntry__c` records after conversion:
+
+- `LogEntryEvent__e.Message__c`
+- `LogEntryEvent__e.RecordJson__c`
+- `LogEntryEvent__e.HttpRequestBody__c`
+- `LogEntryEvent__e.HttpResponseBody__c`
+- `LogEntryEvent__e.RestRequestBody__c`
+- `LogEntryEvent__e.RestResponseBody__c`
+
+## Custom Metadata Type: LogEntryDataMaskRule__mdt
+
+Nebula Logger includes pre-built masking rules for:
+
+- Visa credit card numbers
+- Mastercard credit card numbers
+- Social security numbers
+
+Additional rules can be configured by creating new `LogEntryDataMaskRule__mdt` records. Each rule defines a pattern to detect and mask sensitive data automatically when log entries are created.
+
+## Data Masking in Action
+
+When you create log entries, any enabled data mask rules are applied automatically. Here's an example that logs fake credit card and SSN data:
+
+```apex
+Logger.error('Here is my fake Visa credit card 4000-1111-2222-0004, please don\'t steal it')
+  .addTag('data masking rule')
+  .addTag('credit card masking');
+
+Logger.warn('Here is my fake Mastercard credit card 5000-1111-2222-0005, please don\'t steal it')
+  .addTag('data masking rule')
+  .addTag('credit card masking');
+
+Logger.info('In case you want to steal my identity, my fake social is 400-11-9999, thanks', currentUser)
+  .addTag('data masking rule')
+  .addTag('an informational tag');
+
+Logger.saveLog();
+```
+
+With data mask rules enabled, the sensitive data is automatically masked in stored log entries. Credit card numbers and social security numbers are replaced with masked values, protecting sensitive information in your logs.
+
+## Disabling Masking for Specific Users
+
+You can control whether data masking is enabled using the hierarchy custom setting `LoggerSettings__c`. This allows you to:
+
+- Enable or disable masking at the organization level
+- Override for specific profiles
+- Override for individual users
+
+This flexibility lets you implement different data retention policies based on user roles and compliance requirements.
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Configuring-Data-Mask-Rules), © Jonathan Gillespie and contributors, MIT License.*

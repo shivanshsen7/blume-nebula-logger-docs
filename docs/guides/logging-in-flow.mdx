@@ -1,0 +1,48 @@
+---
+title: Logging in Flow
+description: Add structured logging to Salesforce Flows and Process Builder using Nebula Logger's invocable actions.
+sidebar:
+  label: Flow Logging
+  order: 7
+---
+
+## Quick Start
+
+Flow & Process Builder support several Nebula Logger actions that let you create log entries directly from your automation. To start logging, simply select one of the available invocable actions.
+
+![Flow Logger Actions](https://raw.githubusercontent.com/wiki/jongpie/NebulaLogger/images/flow-logger-actions.png)
+
+A typical setup configures the logger to run after record inserts and updates. For example, you can log a Case record using the 'Add Log Entry for an SObject Record' action:
+
+![Flow Builder: Log Case](https://raw.githubusercontent.com/wiki/jongpie/NebulaLogger/images/flow-builder-log-case.png)
+
+This creates a `Log__c` record with related `LogEntry__c` records, enabling detailed audit trails and debugging:
+
+![Flow Log Results](https://raw.githubusercontent.com/wiki/jongpie/NebulaLogger/images/flow-log.png)
+
+## Invocable Actions
+
+Nebula Logger provides 4 invocable actions within Flow and Process Builder:
+
+<CardGroup cols={2}>
+  <Card title="Add Log Entry" icon="pencil">
+    Uses the `FlowLogEntry` class to add a log entry with a specified message. Best for simple text logging without context to a specific record.
+  </Card>
+  <Card title="Add Log Entry for an SObject Record" icon="database">
+    Uses the `FlowRecordLogEntry` class to log a message associated with a particular SObject record. Automatically captures the record ID for reference.
+  </Card>
+  <Card title="Add Log Entry for an SObject Record Collection" icon="list">
+    Uses the `FlowCollectionLogEntry` class to log a message for an entire SObject record collection. Useful when processing multiple records in a loop.
+  </Card>
+  <Card title="Save Log" icon="floppy-disk">
+    Uses the `Logger` class to persist any pending log entries. Call this action at the end of your Flow to commit all logs to the database.
+  </Card>
+</CardGroup>
+
+Each action integrates seamlessly with Flow's visual builder, allowing you to pass parameters like log level, message, and record context without writing code.
+
+![Flow Builder: Logging Invocable Actions](https://raw.githubusercontent.com/wiki/jongpie/NebulaLogger/images/flow-builder-logging-invocable-actions.png)
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Logging-in-Flow), © Jonathan Gillespie and contributors, MIT License.*

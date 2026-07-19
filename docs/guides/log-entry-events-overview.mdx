@@ -1,0 +1,36 @@
+---
+title: Log Entry Events Overview
+description: A placeholder page carried over from the upstream Nebula Logger wiki, which has not yet published dedicated "Log Entry Events Overview" content.
+sidebar:
+  label: Log Entry Events
+  order: 12
+---
+
+This page mirrors the `Log-Entry-Events-Overview` entry in the upstream [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki), listed there under "Pub/Sub with Platform Events" as **Subscribe to `LogEntryEvent__e` Platform Events**. As of this writing, that source page is an unwritten stub (its entire contents are the placeholder text "TODO"), so there is no additional technical detail to adapt here yet.
+
+<Panel>
+The upstream wiki maintainers have not yet published this page. Rather than inventing subscriber setup steps or platform event behavior that aren't documented in the source, this demo page stays intentionally minimal until the real content exists.
+</Panel>
+
+## Where to go instead
+
+If you're looking for what `LogEntryEvent__e` actually is and how it fits into Nebula Logger, that material currently lives across a few other pages this demo site has already adapted:
+
+<CardGroup cols={2}>
+  <Card title="Architecture guide" icon="sitemap">
+    Explains where the `LogEntryEvent__e` platform event sits in Logger's layered architecture, alongside the `Log__c`, `LogEntry__c`, `LogEntryTag__c`, and `LoggerTag__c` custom objects.
+  </Card>
+  <Card title="Plugin Framework guide" icon="puzzle">
+    Covers `LogEntryEvent__e` as one of the trigger objects plugins can hook into, along with the `LoggerPlugin.Triggerable` Apex interface and related custom metadata configuration.
+  </Card>
+  <Card title="Managing Logs guide" icon="list-check">
+    Details how log data is ultimately tracked and managed once it's been persisted from `LogEntryEvent__e` into `Log__c` and `LogEntry__c` records.
+  </Card>
+  <Card title="Upstream source" icon="github">
+    The original, unwritten `Log-Entry-Events-Overview` page on GitHub — check there for the latest status in case the maintainers have since filled it in.
+  </Card>
+</CardGroup>
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Log-Entry-Events-Overview), © Jonathan Gillespie and contributors, MIT License.*

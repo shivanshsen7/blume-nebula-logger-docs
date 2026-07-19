@@ -1,0 +1,116 @@
+---
+title: "Apex Reference — Log Management"
+description: "Reference for the Apex classes that store, purge, display, and manage Nebula Logger's Log__c, LogEntry__c, and related records."
+sidebar: { label: "Log Management", order: 2 }
+---
+
+The Log Management module contains the Apex classes that run after log data has been captured — the trigger handlers that populate `Log__c`/`LogEntry__c`/related object fields, the selector class used for all log-management queries, the batch/scheduled purge jobs that clean up old logs, and the Apex controllers behind the Nebula Logger LWCs (log viewer, settings UI, related log entries, admin home page, etc.).
+
+## LogManagementDataSelector
+
+Selector class used for all SOQL queries that are specific to the log management layer. It's accessed as a singleton via `getInstance()` and exposes a large set of read-only query methods for logs, log entries, tags, scenarios, and related Salesforce metadata (users, profiles, queues, Apex classes/triggers, flows, async jobs, topics).
+
+| Method | Description |
+| --- | --- |
+| `getInstance()` → `LogManagementDataSelector` | Returns the singleton instance used for log management queries. |
+| `getAll(SObjectType, Set<String> fieldNames)` → `List<SObject>` | Dynamically queries and returns all records of the given `SObjectType`. |
+| `getById(SObjectType, Set<String> fieldNames, List<Id>)` → `List<SObject>` | Dynamically queries records of the given `SObjectType` by ID. |
+| `getLogById(Id)` / `getLogsById(List<Id>)` → `Log__c` / `List<Log__c>` | Returns one or more `Log__c` records by ID. |
+| `getLogsByTransactionId(List<String>)` → `List<Log__c>` | Returns `Log__c` records matching the given transaction IDs. |
+| `getLogsWithoutParentLogByParentTransactionId(List<String>)` → `List<Log__c>` | Returns `Log__c` records with a matching parent transaction ID but no `ParentLog__c` set. |
+| `getLogEntryById(Id)` / `getLogEntriesByLogId(Id)` → `LogEntry__c` / `List<LogEntry__c>` | Returns log entry record(s) by ID or by parent log ID. |
+| `getCountOfRelatedRecordLogEntries(Id recordId)` → `Integer` | Counts `LogEntry__c` records related to a given record ID. |
+| `getTagsByName(Set<String>)` / `getLoggerScenariosById(List<Id>)` → `List<LoggerTag__c>` / `List<LoggerScenario__c>` | Looks up tag or scenario records. |
+| `getCachedApexEmailNotifications()` / `getCachedRecentLogWithApiReleaseDetails()` | Cached lookups for Apex email notification recipients and a recent log enriched with Salesforce API release/status details. |
+| `getCountOfAsyncApexJobs(apexClassName, apexMethodName, jobStatuses)` → `Integer` | Counts matching `Schema.AsyncApexJob` records, e.g. to detect an already-running purge job. |
+| `getApexClasses(...)`, `getApexTriggers(...)`, `getFlowDefinitionViewsByFlowApiName(...)`, `getFlowVersionViewsByDurableId(...)`, `getOmniProcessProxies(...)` | Resolve Apex/Flow/OmniProcess metadata used to enrich log origin details. |
+| `getUsersById(...)`, `getUsersByUsername(...)`, `getUsersByNameSearch(...)`, `getProfilesById(...)`, `getProfilesByNameSearch(...)`, `getQueuesByDeveloperName(...)`, `getTopicsByName(...)`, `getDeleteableUserRecordAccess(...)` | Resolve users, profiles, queues, topics, and record-level delete access used by the settings and related-list UIs. |
+
+## LogBatchPurger
+
+Batch class used to delete old logs, based on `Log__c.LogRetentionDate__c <= :System.today()`. It implements `Database.Batchable`/`Database.Stateful` and chains itself across `LogEntryTag__c`, `LogEntry__c`, and finally `Log__c`.
+
+| Method | Description |
+| --- | --- |
+| `start(Database.BatchableContext)` → `Database.QueryLocator` | Builds the query locator for records to purge; throws `NoAccessException` if the user lacks delete access to Logs. |
+| `execute(Database.BatchableContext, List<Log__c\|SObject>)` → `void` | Executes the purge logic for a batch scope. |
+| `finish(Database.BatchableContext)` → `void` | Runs after all batches complete and writes a completion status to `Log__c`. |
+| `getDefaultBatchSize()` → `Integer` | Returns the configured default batch size (custom metadata `LoggerParameter.LogBatchPurgerDefaultBatchSize`, default `500`). |
+| `setChainedBatchSize(Integer)` → `LogBatchPurger` | Sets the batch size used for subsequent chained instances; returns itself for chaining. |
+
+## LogBatchPurgeScheduler
+
+Schedulable class used to schedule the `LogBatchPurger` batch job. Its constructors accept either no arguments (default batch size 200) or an explicit `batchSize` (max 5000, min 1), and its `execute(System.SchedulableContext)` method kicks off `LogBatchPurger` on the configured schedule.
+
+## LogBatchPurgeController
+
+Controller class for the `logBatchPurge` LWC. It surfaces metrics on how many `Log__c`, `LogEntry__c`, and `LogEntryTag__c` records are eligible for purge, and lets a user manually run `LogBatchPurger` from the UI.
+
+| Method | Description |
+| --- | --- |
+| `canUserRunLogBatchPurger()` → `Boolean` | True if the current user has delete permission on `Log__c`. |
+| `getBatchPurgeJobRecords()` → `List<Schema.AsyncApexJob>` | Returns batch job details for display in a datatable. |
+| `getMetrics(String dateFilterOption)` → `Map<String, Object>` | Returns purge-eligible record counts (grouped by `Log__c.LogPurgeAction__c`) for `TODAY`, `THIS_WEEK`, or `THIS_MONTH`. |
+| `getPurgeActionOptions()` → `List<PicklistOption>` | Returns the picklist options for purge action, used to render metrics in the UI. |
+| `runBatchPurge()` → `String` | Kicks off `LogBatchPurger` with the default batch size and returns the resulting `Schema.AsyncApexJob` ID. |
+
+## LoggerSObjectHandler
+
+Abstract base class used by all of the module's trigger handlers to share common logic — running the handler's core logic plus any configured plugins via `execute()`, and exposing hooks (`getSObjectType()`, `getHandlerControlParameterName()`) that subclasses implement to identify which object they process and which `LoggerParameter` controls whether they're enabled.
+
+## Object-specific trigger handlers
+
+Several thin trigger-handler classes extend `LoggerSObjectHandler`, each managing one Log Management object. All primarily expose `getSObjectType()` → `Schema.SObjectType` to identify the object they process, with a couple of object-specific additions:
+
+| Class | Purpose |
+| --- | --- |
+| `LogHandler` | Sets fields on `Log__c` before insert/update. |
+| `LogEntryHandler` | Sets fields on `LogEntry__c` before insert/update, including resolving Apex class/trigger source metadata (via inner class `SourceMetadataSnippet`). |
+| `LogEntryTagHandler` | Handles `LogEntryTag__c` trigger events; `generateUniqueId(LogEntryTag__c)` → `String` builds the composite key used for `LogEntryTag__c.UniqueId__c`. |
+| `LoggerTagHandler` | Handles trigger events for `LoggerTag__c`. |
+| `LoggerScenarioHandler` | Handles trigger events for `LoggerScenario__c`. |
+| `LogEntryEventHandler` | Processes `LogEntryEvent__e` platform events and normalizes the data into `Log__c` and `LogEntry__c` records; includes a queueable inner routine for async status/API callout updates. |
+
+## LoggerTriggerableContext
+
+Class used by the logging system to carry trigger contextual details (SObject type, trigger operation type, `triggerNew`/`triggerNewMap`/`triggerOldMap`) into handlers and plugins. Its constructor takes the SObject type, `TriggerOperation`, and the trigger collections; the inner `RecordInput` class exposes the old/new record pair to Flow-based plugins.
+
+## LoggerSettingsController
+
+Controller class for the `loggerSettings` LWC, used to manage `LoggerSettings__c` records (Nebula Logger's hierarchy-based configuration object).
+
+| Method | Description |
+| --- | --- |
+| `canUserModifyLoggerSettings()` → `Boolean` | Checks object-level access or the `CanModifyLoggerSettings` custom permission. |
+| `createRecord()` → `LoggerSettings__c` | Returns a new, unsaved settings record with default values populated. |
+| `getRecords()` → `List<SettingsRecordResult>` | Returns all existing settings records, wrapped with setup-owner display info. |
+| `saveRecord(LoggerSettings__c)` / `deleteRecord(LoggerSettings__c)` → `void` | Upserts or deletes a settings record. |
+| `getPicklistOptions()` → `LoggerSettingsPicklistOptions` | Returns picklist option sets (logging level, purge action, save method, etc.) for the settings form. |
+| `getOrganization()` → `Schema.Organization` | Returns the current environment's org record. |
+| `searchForSetupOwner(setupOwnerType, searchTerm)` → `List<SetupOwnerSearchResult>` | Searches `Schema.Profile` or `Schema.User` records for assigning a settings record's setup owner. |
+
+## LoggerSObjectMetadata
+
+Provides `@AuraEnabled` schema details about Logger's SObjects to LWCs, via `getSchema(Schema.SObjectType)` and `getSchemaForName(String sobjectApiName)`, both returning a `SObjectSchema` inner class (itself made up of per-field `FieldSchema` entries) describing labels, API names, and field metadata.
+
+## RelatedLogEntriesController
+
+Controller class for the `related-log-entries` lightning web component, which shows log entries related to any record. Its single public method, `getQueryResult(recordId, fieldSetName, rowLimit, sortByFieldName, sortDirection, search, shouldEnableStrictSearch)` → `LogEntryQueryResult`, queries matching `LogEntry__c` records for a given record ID using a configurable field set, sort, row limit, and optional search term, and returns them along with field-set/field metadata (`FieldSetMetadata`, `FieldMetadata`) and an accessibility flag.
+
+## Other LWC controllers
+
+A handful of small, focused controller classes back individual Logger LWCs:
+
+| Class | Purpose |
+| --- | --- |
+| `LogViewerController` | Backs the `logViewer` LWC; `getLog(Id logId)` → `LogDTO` returns a `Log__c` record (looked up by Salesforce ID or transaction ID) with its related log entries. |
+| `LogEntryEventStreamController` | Backs the `logEntryEventStream` LWC; `getDatatableDisplayFields()` returns configured display columns, `isEnabled()` reports whether the live stream feature is turned on. |
+| `LogEntryMetadataViewerController` | Backs the `logEntryMetadataViewer` LWC; `getMetadata(recordId, sourceMetadata)` → `LogEntryMetadata` returns source code/metadata for a log entry's origin or exception. |
+| `LogEntryFieldSetPicklist` | Dynamic App Builder picklist that lists `LogEntry__c` field sets for configuring the `RelatedLogEntries` component (`getDefaultValue()`, `getValues()`). |
+| `LoggerHomeHeaderController` | Backs the `loggerHomeHeader` LWC; `getEnvironmentDetails()` → `Environment` returns version, plugin, and org details for the admin home page. |
+| `LogMassDeleteExtension` | Visualforce/StandardSetController extension for mass-deleting `Log__c` records from a list view, restricted to records the current user can delete. |
+| `LoggerEmailSender` | Builds and sends error email notifications (via `sendErrorEmail`, overloaded for `Database.SaveResult`/`Database.UpsertResult`) when internal exceptions occur in the logging system. |
+
+---
+
+*Generated from the real Nebula Logger Apex reference docs (ApexDocs output), © Jonathan Gillespie and contributors, MIT License. See the [full class reference on GitHub](https://github.com/jongpie/NebulaLogger/tree/main/docs/apex/Log Management) for exhaustive detail.*

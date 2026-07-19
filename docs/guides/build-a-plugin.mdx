@@ -1,0 +1,30 @@
+---
+title: Build a Plugin
+description: A placeholder page carried over from the upstream Nebula Logger wiki, which has not yet published dedicated "Build a Plugin" content.
+sidebar:
+  label: Build a Plugin
+  order: 4
+---
+
+This page mirrors the `Build-a-Plugin` entry in the upstream [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki). As of this writing, that source page is an unwritten stub (its entire contents are the placeholder text "TODO"), so there is no additional technical detail to adapt here yet.
+
+<Panel>
+The upstream wiki maintainers have not yet published this page. Rather than inventing plugin APIs or steps that aren't documented in the source, this demo page stays intentionally minimal until the real content exists.
+</Panel>
+
+## Where to go instead
+
+If you're looking for the actual mechanics of building an Apex or Flow plugin for Nebula Logger, that material currently lives on the wiki's **Plugin Framework** page, which this demo site has already adapted.
+
+<CardGroup cols={2}>
+  <Card title="Plugin Framework guide" icon="puzzle">
+    Covers the supported trigger objects (`LogEntryEvent__e`, `Log__c`, `LogEntry__c`, `LogEntryTag__c`, `LoggerTag__c`, `LoggerScenario__c`), the `LoggerPlugin.Triggerable` Apex interface, Flow input/output parameters, and the `LoggerSObjectHandlerPlugin__mdt` / `LoggerSObjectHandlerPluginParameter__mdt` configuration metadata.
+  </Card>
+  <Card title="Upstream source" icon="github">
+    The original, unwritten `Build-a-Plugin` page on GitHub — check there for the latest status in case the maintainers have since filled it in.
+  </Card>
+</CardGroup>
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Build-a-Plugin), © Jonathan Gillespie and contributors, MIT License.*

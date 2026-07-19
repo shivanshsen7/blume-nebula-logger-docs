@@ -1,0 +1,44 @@
+---
+title: About this demo
+description: What this site is, what it isn't, and where the content comes from.
+sidebar:
+  label: About this demo
+  icon: info
+  order: 6
+---
+
+## What this is
+
+This site is a **fan-made, unofficial demo**. It exists to answer one question concretely: *what does it take to give a Salesforce open-source project a modern, searchable, AI-ready docs site?* The answer, it turns out, is a Markdown folder and one CLI tool — [Blume](https://useblume.dev).
+
+It is **not** affiliated with, endorsed by, or produced by the maintainers of Nebula Logger.
+
+## What this isn't
+
+This is not a replacement for the official documentation. For anything authoritative — installation, releases, issues, the full wiki — go straight to the source:
+
+<CardGroup cols={2}>
+  <Card title="Nebula Logger on GitHub" href="https://github.com/jongpie/NebulaLogger" icon="github">
+    The real repository — 935+ stars, actively maintained by Jonathan Gillespie and contributors.
+  </Card>
+  <Card title="Official docs" href="https://jongpie.github.io/NebulaLogger/" icon="book">
+    The maintainer's own documentation site.
+  </Card>
+</CardGroup>
+
+## Attribution & license
+
+All technical content reproduced across this demo (feature descriptions, code samples, API names) is adapted from the [Nebula Logger README](https://github.com/jongpie/NebulaLogger/blob/main/README.md), © Jonathan Gillespie and contributors, released under the **MIT License**. The MIT License permits reuse and adaptation like this, provided the original copyright notice and license are retained — see `ATTRIBUTION.md` in the root of this repository for the full notice and license text.
+
+Nebula Logger itself is 100% free and open source. If your team ends up using it after reading this, the right next step is installing the real package from the real repo, not this one.
+
+## How this was built
+
+1. Pulled the real Nebula Logger README and public docs as raw source material
+2. Reorganized it around three audiences — developers, admins, and architects — instead of one long linear page, since that's how Salesforce teams actually divide up this kind of work
+3. Ran `npx blume init`, dropped the content in as `.mdx` files, and used Blume's built-in `Tabs`, `CodeGroup`, `CardGroup`, and `Panel` components with zero custom components written
+4. Built and deployed as a static site — no server, no CMS, no ongoing maintenance beyond editing Markdown
+
+<Panel>
+  Every page on this site is also available as raw Markdown at its URL plus `.md`, and the whole site has an auto-generated `llms.txt` for AI agents. That's a Blume default, not something built for this demo — try appending `.md` to this page's URL.
+</Panel>

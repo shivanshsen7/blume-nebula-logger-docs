@@ -1,0 +1,30 @@
+---
+title: Configuring Global Features
+description: A placeholder page carried over from the upstream Nebula Logger wiki, which has not yet published dedicated "Configuring Global Features" content.
+sidebar:
+  label: Configuring Global Features
+  order: 14
+---
+
+This page mirrors the `Configuring-Global-Features` entry in the upstream [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki). As of this writing, that source page is an unwritten stub (its entire contents are the placeholder text "TODO"), so there is no additional technical detail to adapt here yet.
+
+<Panel>
+The upstream wiki maintainers have not yet published this page. Rather than inventing configuration steps that aren't documented in the source, this demo page stays intentionally minimal until the real content exists.
+</Panel>
+
+## Where to go instead
+
+Global, org-wide feature flags in Nebula Logger are configured via the `LoggerParameter__mdt` custom metadata type — already covered on this site's Apex configuration reference and referenced throughout the Architecture guide.
+
+<CardGroup cols={2}>
+  <Card title="Architecture" href="/guides/architecture" icon="building">
+    See the Configuration Layer section for where `LoggerParameter__mdt` fits among Nebula Logger's other settings.
+  </Card>
+  <Card title="Apex Reference — Configuration" href="/reference/apex-configuration" icon="code">
+    Class-level detail on the Apex that reads and applies these parameters at runtime.
+  </Card>
+</CardGroup>
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Configuring-Global-Features), © Jonathan Gillespie and contributors, MIT License.*

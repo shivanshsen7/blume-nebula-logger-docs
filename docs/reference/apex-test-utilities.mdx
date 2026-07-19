@@ -1,0 +1,97 @@
+---
+title: "Apex Reference — Test Utilities"
+description: "Reference for Nebula Logger's Apex test-utility classes used to mock data, database/event-bus/queueable operations, and Logger configuration in unit tests."
+sidebar: { label: "Test Utilities", order: 5 }
+---
+
+The Test Utilities module provides helper classes for writing Apex unit tests against Nebula Logger and its plugins — generating mock SObjects, database/DML results, HTTP callouts, and async-context objects, mocking the database/event bus/job queue so tests don't depend on real DML or platform event delivery, and configuring Logger's custom-metadata-driven settings within a test context.
+
+## LoggerMockDataCreator
+
+Utility class for generating mock data in Apex tests, such as mock `Database`/`Approval` DML results, mock `HttpRequest`/`HttpResponse`/`HttpCalloutMock` instances, mock record IDs, and test `SObject` records with sample data. These methods are generic and work in any Salesforce org, including when writing tests for plugins.
+
+| Method | Description |
+| --- | --- |
+| `createAggregateResult()` → `AggregateResult` | Generates a mock `AggregateResult` (which can't be instantiated directly in Apex), with no fields/values populated. |
+| `createApprovalLockResult(Boolean, [Id])` → `Approval.LockResult` | Creates a mock `Approval.LockResult` with a given `isSuccess` value and optional record ID. |
+| `createApprovalProcessResult(Boolean, [Id])` → `Approval.ProcessResult` | Creates a mock `Approval.ProcessResult` with a given `isSuccess` value and optional record ID. |
+| `createApprovalUnlockResult(Boolean, [Id])` → `Approval.UnlockResult` | Creates a mock `Approval.UnlockResult` with a given `isSuccess` value and optional record ID. |
+| `createDatabaseDeleteResult(Boolean, [Id])` → `Database.DeleteResult` | Creates a mock `Database.DeleteResult` with a given `isSuccess` value and optional record ID. |
+| `createDatabaseEmptyRecycleBinResult(Boolean, [Id])` → `Database.EmptyRecycleBinResult` | Creates a mock `Database.EmptyRecycleBinResult` with a given `isSuccess` value and optional record ID. |
+| `createDatabaseLeadConvertResult(Boolean, [Id])` → `Database.LeadConvertResult` | Creates a mock `Database.LeadConvertResult` with a given `isSuccess` value and optional record ID. |
+| `createDatabaseMergeResult(Boolean, [Id])` → `Database.MergeResult` | Creates a mock `Database.MergeResult` with a given `isSuccess` value and optional record ID. |
+| `createDatabaseSaveResult(Boolean, [Id])` → `Database.SaveResult` | Creates a mock `Database.SaveResult` with a given `isSuccess` value and optional record ID. |
+| `createDatabaseUndeleteResult(Boolean, [Id])` → `Database.UndeleteResult` | Creates a mock `Database.UndeleteResult` with a given `isSuccess` value and optional record ID. |
+| `createDatabaseUpsertResult(Boolean, Boolean, [Id])` → `Database.UpsertResult` | Creates a mock `Database.UpsertResult` with given `isSuccess`/`isCreated` values and optional record ID. |
+| `createDataBuilder(Schema.SObjectType \| SObject)` → `SObjectTestDataBuilder` | Creates a new `SObjectTestDataBuilder` for a given `SObjectType` (generating a new record) or for an existing `SObject` record. |
+| `createHttpCallout()` → `MockHttpCallout` | Generates a `MockHttpCallout` instance implementing `System.HttpCalloutMock`, for use when testing batch jobs. |
+| `createHttpRequest()` → `System.HttpRequest` | Generates an `HttpRequest` instance for testing logging of HTTP requests. |
+| `createHttpResponse()` → `System.HttpResponse` | Generates an `HttpResponse` instance for testing logging of HTTP responses. |
+| `createId(Schema.SObjectType)` → `String` | Generates a mock record ID for the given `SObjectType`. |
+| `createUser([Id profileId])` → `Schema.User` | Creates an (uninserted) `Schema.User` record using the current user's profile, or a specified profile ID. |
+| `getOrganization()` → `Schema.Organization` | Queries the `Schema.Organization` record for the current environment. |
+| `getOrganizationEnvironmentType()` → `String` | Returns the current environment's type — Scratch Org, Sandbox, or Production. |
+| `getUser([Id userId])` → `Schema.User` | Returns the current user, or a specified user by ID. |
+| `insertQueue(String queueDeveloperName, Schema.SObjectType)` → `Schema.Group` | Creates and inserts a `Schema.Group` (plus a child `QueueSObject`) for testing queues that own the given `SObjectType`. |
+| `setReadOnlyField(SObject, Schema.SObjectField \| Map<Schema.SObjectField, Object>, [Object value])` → `SObject` | Returns a copy of an `SObject` record with one or more normally read-only fields populated. |
+
+### Inner class: SObjectTestDataBuilder
+
+A fluent builder used to populate an `SObject` record with static fake data when the exact values don't matter for the test.
+
+| Method | Description |
+| --- | --- |
+| `populateAllFields()` → `SObjectTestDataBuilder` | Populates a value on every editable field that doesn't already have one set (including explicit `null`). |
+| `populateRequiredFields()` → `SObjectTestDataBuilder` | Populates a value on every editable *required* field that doesn't already have one set. |
+| `populateMockId()` → `SObjectTestDataBuilder` | Generates and sets a mock record ID on the builder's record. |
+| `getRecord()` → `SObject` | Returns the resulting `SObject` record with fields populated based on which builder methods were called. |
+
+`LoggerMockDataCreator` also exposes several small inner mock-context classes for testing async Apex — `MockBatchableContext`, `MockQueueableContext`, `MockSchedulableContext`, and `MockFinalizerContext` — each providing simple getters (e.g. `getJobId()`, `getChildJobId()`, `getTriggerId()`, `getAsyncApexJobId()`, `getException()`, `getResult()`) that mirror their real Salesforce context-object counterparts, plus the `MockHttpCallout` class (constructed via `createHttpCallout()`) with `request`/`response`/`responseBody`/`statusCode`/`statusMessage` properties and `respond()`, `setResponseBody()`, `setStatus()`, and `setStatusCode()` methods for building fluent mock HTTP responses.
+
+## LoggerMockDataStore
+
+Utility class that provides mock implementations for data-related operations against the database, the event bus, and the async job queue, so tests don't need to rely on real DML, real platform event publishing, or real job execution. Like `LoggerMockDataCreator`, these methods are generic and safe to use in plugin tests too.
+
+| Method | Description |
+| --- | --- |
+| `getDatabase()` → `MockDatabase` | Returns the mock database instance used to intercept `insert`/DML-style operations. |
+| `getEventBus()` → `MockEventBus` | Returns the mock event bus instance used to intercept platform event publishing. |
+| `getJobQueue()` → `MockJobQueue` | Returns the mock job queue instance used to intercept enqueued `Queueable` jobs. |
+
+### Inner class: MockDatabase
+
+- `insertRecords(List<SObject>)` → `List<Database.SaveResult>` — records the provided list as if inserted, returning mock save results.
+
+### Inner class: MockEventBus
+
+| Method | Description |
+| --- | --- |
+| `publishRecord(SObject)` / `publishRecords(List<SObject>)` → `Database.SaveResult` / `List<Database.SaveResult>` | Records one or more platform event SObjects as "published" without an actual event bus call. |
+| `deliver()` / `deliver(Schema.SObjectType)` / `deliver(LoggerSObjectHandler)` | Simulates delivery of the published events, optionally scoped to a specific `SObjectType` or handler instance. |
+| `getPublishedPlatformEvents()` → `List<SObject>` | Returns all platform events published so far in the mock event bus. |
+| `getMatchingPublishedPlatformEvents(SObject comparisonPlatformEvent)` → `List<SObject>` | Returns only the published platform events whose field values match the given comparison record — useful for isolating the `LogEntryEvent__e` records relevant to one test. |
+| `getPublishCallCount()` → `Integer` | Returns how many times a publish method has been called. |
+
+### Inner class: MockJobQueue
+
+- `enqueueJob(System.Queueable)` → `Id` — records a queueable job as enqueued and returns a mock job ID.
+- `executeJobs()` → `void` — synchronously executes all jobs that have been enqueued.
+- `getEnqueuedJobs()` → `List<System.Queueable>` — returns the jobs currently enqueued in the mock queue.
+
+## LoggerTestConfigurator
+
+Utility class for setting up Nebula Logger's custom-metadata-driven configuration within a test context — assigning Logger's permission sets to a test user, and loading mock custom-metadata records (`LoggerParameter__mdt`, `LoggerSObjectHandler__mdt`, `LoggerPlugin__mdt`, `LogStatus__mdt`, etc.) so tests aren't dependent on org configuration.
+
+| Method | Description |
+| --- | --- |
+| `assignAdminPermissionSet(Id userId)` → `void` | Assigns the `LoggerAdmin` permission set to the specified user. |
+| `assignEndUserPermissionSet(Id userId)` → `void` | Assigns the `LoggerEndUser` permission set to the specified user. |
+| `assignLogCreatorPermissionSet(Id userId)` → `void` | Assigns the `LoggerLogCreator` permission set to the specified user. |
+| `assignLogViewerPermissionSet(Id userId)` → `void` | Assigns the `LoggerLogViewer` permission set to the specified user. |
+| `getSObjectHandlerConfiguration(Schema.SObjectType)` → `LoggerSObjectHandler__mdt` | Returns the configured handler metadata record for the given `SObjectType`, if any. |
+| `setMock(LogEntryDataMaskRule__mdt \| LogEntryTagRule__mdt \| LoggerParameter__mdt \| LoggerPlugin__mdt \| LoggerSObjectHandler__mdt \| LoggerScenarioRule__mdt \| LogStatus__mdt mock)` → `void` | Loads a mock custom-metadata record of the corresponding type for use during test execution (one overload per metadata type). |
+| `setupMockSObjectHandlerConfigurations([Boolean isEnabled])` → `void` | Creates mock `LoggerSObjectHandler__mdt` records for every `SObjectType` used by Nebula Logger, enabled by default or set to the given boolean. |
+
+---
+
+*Generated from the real Nebula Logger Apex reference docs (ApexDocs output), © Jonathan Gillespie and contributors, MIT License. See the [full class reference on GitHub](https://github.com/jongpie/NebulaLogger/tree/main/docs/apex/Test Utilities) for exhaustive detail.*

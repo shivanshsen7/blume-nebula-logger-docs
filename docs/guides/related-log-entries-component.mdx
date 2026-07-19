@@ -1,0 +1,39 @@
+---
+title: Related Log Entries Component
+description: Display and search related log entries for any Salesforce record using the Related Log Entries lightning web component.
+sidebar:
+  label: Related Log Entries
+  order: 11
+---
+
+Within App Builder, admins can add the **Related Log Entries** lightning web component (LWC) to any record page. This component automatically displays all log entries associated with a record and provides a powerful search experience while respecting Salesforce's security model.
+
+## Features
+
+The component automatically discovers and displays related log entries based on the `LogEntry__c.RecordId__c` field matching the current record's ID.
+
+**Built-in Search**
+
+Users can search the list of log entries for a particular record using the component's integrated search box. The component dynamically searches all related log entries using SOSL (Salesforce Object Search Language), enabling fast, full-text searching across your log data.
+
+**Flexible Column Configuration**
+
+Admins control which columns are displayed by creating and selecting a field set on `LogEntry__c` with the desired fields. This allows you to tailor the component's display to show exactly the information your team needs.
+
+## Security
+
+<Panel>
+  The component automatically enforces Salesforce's comprehensive security model, ensuring users only see data they have permission to access.
+</Panel>
+
+The component respects three layers of Salesforce security:
+
+- **Object-Level Security** — Users without read access to `LogEntry__c` will not see the component at all.
+- **Record-Level Security** — Users will only see log entry records that have been shared with them.
+- **Field-Level Security** — Users will only see the fields within the selected field set that they have access to.
+
+![Related Log Entries Component](https://raw.githubusercontent.com/wiki/jongpie/NebulaLogger/images/relate-log-entries-lwc.png)
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Related-Log-Entries-Component), © Jonathan Gillespie and contributors, MIT License.*

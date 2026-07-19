@@ -1,0 +1,74 @@
+---
+title: Plugin Framework
+description: Extend Nebula Logger with your own Apex or Flow automation that runs automatically after trigger events.
+sidebar:
+  label: Plugin Framework
+  order: 3
+---
+
+If you want to add your own automation to the included custom objects, you can leverage Apex or Flow to define "plugins" - the logger system will then automatically run the plugins after each trigger event (`BEFORE_INSERT`, `BEFORE_UPDATE`, `AFTER_INSERT`, `AFTER_UPDATE`, and so on). Currently, these objects are supported:
+
+- `LogEntryEvent__e` platform event
+- `Log__c` custom object
+- `LogEntry__c` custom object
+- `LogEntryTag__c` custom object
+- `LoggerTag__c` custom object
+- `LoggerScenario__c` custom object
+
+This framework (currently in beta) makes it easy to build your own plugins, or deploy/install others' prebuilt packages, without having to modify the logging system directly.
+
+## Build a plugin
+
+<Tabs>
+  <Tab title="Flow">
+    Your Flow should be built as an auto-launched Flow with these parameters:
+
+    1. `Input` parameter `triggerOperationType` - The name of the current trigger operation (such as `BEFORE_INSERT`, `BEFORE_UPDATE`, etc.)
+    2. `Input` parameter `triggerNew` - The list of logger records being processed (`Log__c` or `LogEntry__c` records)
+    3. `Output` parameter `updatedTriggerNew` - If your Flow makes any updates to the collection of records, you should return a record collection containing the updated records
+    4. `Input` parameter `triggerOld` - The list of logger records as they exist in the database
+  </Tab>
+  <Tab title="Apex">
+    Your Apex class should implement `LoggerPlugin.Triggerable`. For example:
+
+    ```apex
+    public class ExampleTriggerablePlugin implements LoggerPlugin.Triggerable {
+      public void execute(LoggerPlugin__mdt configuration, LoggerTriggerableContext input) {
+        // Example: only run the plugin for Log__c records
+        if (context.sobjectType != Schema.Log__c.SObjectType) {
+          return;
+        }
+
+        List<Log__c> logs = (List<Log__c>) input.triggerNew;
+        switch on input.triggerOperationType {
+          when BEFORE_INSERT {
+            for (Log__c log : logs) {
+              log.Status__c = 'On Hold';
+            }
+          }
+          when BEFORE_UPDATE {
+            // TODO add before-update logic
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Configure the plugin
+
+Once you've created your Apex or Flow plugin(s), you will also need to configure the plugin using custom metadata types:
+
+| Metadata type | Purpose |
+| --- | --- |
+| `LoggerSObjectHandlerPlugin__mdt` | Defines your plugin, including the plugin type (Apex or Flow) and the API name of your plugin's Apex class or Flow |
+| `LoggerSObjectHandlerPluginParameter__mdt` | Defines any configurable parameters needed for your plugin, such as environment-specific URLs and other similar configurations |
+
+<Panel>
+The logger plugin framework is not available in the managed package due to some platform limitations & considerations with some of the underlying code. The unlocked package is recommended (instead of the managed package) when possible, including if you want to be able to leverage the plugin framework in your org.
+</Panel>
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Plugin-Framework), © Jonathan Gillespie and contributors, MIT License.*

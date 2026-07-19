@@ -1,0 +1,117 @@
+---
+title: For Developers
+description: Apex and Lightning Web Component quick starts, fluent logging API, and save methods.
+sidebar:
+  label: For Developers
+  icon: code
+  order: 2
+---
+
+Nebula Logger gives Apex and Lightning Web Component developers a single, fluent logging API instead of scattered `System.debug()` calls that disappear the moment the transaction ends.
+
+## Apex quick start
+
+```apex
+Logger.error('Add log entry using Nebula Logger with logging level == ERROR');
+Logger.warn('Add log entry using Nebula Logger with logging level == WARN');
+Logger.info('Add log entry using Nebula Logger with logging level == INFO');
+Logger.debug('Add log entry using Nebula Logger with logging level == DEBUG');
+Logger.fine('Add log entry using Nebula Logger with logging level == FINE');
+Logger.finer('Add log entry using Nebula Logger with logging level == FINER');
+Logger.finest('Add log entry using Nebula Logger with logging level == FINEST');
+Logger.saveLog();
+```
+
+Each call becomes one `Log__c` record with related `LogEntry__c` records — queryable, reportable, and dashboard-able like any other Salesforce data.
+
+## Lightning components
+
+<Tabs>
+  <Tab title="LWC">
+
+```javascript
+import { getLogger } from 'c/logger';
+
+export default class LoggerDemo extends LightningElement {
+  logger = getLogger();
+
+  connectedCallback() {
+    this.logger.info('Hello, world');
+    this.logger.saveLog();
+  }
+}
+```
+
+  </Tab>
+  <Tab title="Aura">
+
+```html
+<aura:component implements="force:appHostable">
+  <c:logger aura:id="logger" />
+</aura:component>
+```
+
+```javascript
+const logger = component.find('logger');
+logger.error('Hello, world!').addTag('tag');
+logger.saveLog();
+```
+
+  </Tab>
+</Tabs>
+
+## Fluent interface
+
+Methods chain, so you can attach records, tags, and custom fields in one line:
+
+```apex
+Logger.debug('my string').setRecord(currentUser);
+Logger.debug('message').addTag('important');
+```
+
+## Save methods
+
+Logging shouldn't slow down your transaction. Nebula Logger supports four ways to persist logs, controlled per-transaction or globally:
+
+<CodeGroup>
+
+```apex Event Bus (default)
+Logger.setSaveMethod(Logger.SaveMethod.EVENT_BUS);
+// Publishes LogEntryEvent__e platform events — fully async, no governor limit impact
+```
+
+```apex Queueable
+Logger.setSaveMethod(Logger.SaveMethod.QUEUEABLE);
+// Defers processing to an async queueable job
+```
+
+```apex REST
+Logger.setSaveMethod(Logger.SaveMethod.REST);
+// Synchronous callout using the current session ID
+```
+
+```apex Synchronous DML
+Logger.setSaveMethod(Logger.SaveMethod.SYNCHRONOUS_DML);
+// Immediate Log__c / LogEntry__c creation in the current transaction
+```
+
+</CodeGroup>
+
+## Transaction controls
+
+- `Logger.suspendSaving()` / `Logger.resumeSaving()` — pause and resume persistence mid-transaction
+- `Logger.flushBuffer()` — discard unsaved entries entirely
+- `Logger.setParentLogTransactionId(String)` — stitch batch and queueable jobs back to the log that kicked them off
+
+## For ISVs: optional dependency
+
+Package developers can call Nebula Logger without a hard dependency, using the `Callable` interface:
+
+```apex
+Type nebulaLoggerType = Type.forName('Nebula', 'CallableLogger') ?? Type.forName('CallableLogger');
+Callable nebulaLoggerInstance = (Callable) nebulaLoggerType?.newInstance();
+```
+
+<Panel>
+  This entire page — code blocks, tabs, and all — is plain Markdown/MDX with no custom components written for this demo. Blume ships the `Tabs`, `CodeGroup`, `Card`, and `Panel` components out of the box.
+</Panel>

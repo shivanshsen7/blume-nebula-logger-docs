@@ -1,0 +1,71 @@
+---
+title: Assigning Permission Sets
+description: Manage access to Nebula Logger using built-in permission sets for different user roles and scenarios.
+sidebar:
+  label: Permission Sets
+  order: 16
+---
+
+## Overview
+
+Nebula Logger includes 4 permission sets designed to cover common scenarios for granting users partial or full access to the logging system and related objects.
+
+## LoggerLogCreator Permission Set
+
+This permission set provides explicit access to Nebula Logger's top-level Apex classes and metadata used to generate logging data through Apex, Lightning Components, Flow, and Process Builder:
+
+- The `Logger` Apex class for logging in Apex
+- The `@InvocableMethod` classes `FlowCollectionLogEntry`, `FlowLogEntry`, and `FlowRecordLogEntry` for logging in Flow
+- The `@AuraEnabled` class `ComponentLogger` for logging in Lightning Web Components (LWCs) and Aura components
+
+<Panel>
+In **most** cases, this permission set is **not** needed. Nebula Logger is designed to run in system mode to ensure that logging occurs regardless of the current user's permissions.
+</Panel>
+
+However, in some situations, Salesforce **requires** explicit access via this permission set (or another permission set/profile granting it):
+
+### Experience Cloud (Community Cloud)
+
+Salesforce requires Experience Cloud users—including guest users—to have explicit access to Apex classes:
+
+- [Best Practices for Guest User Profiles](https://help.salesforce.com/s/articleView?id=sf.networks_guest_profile_best_practices.htm&type=5): "add guest user profile access to any `@AuraEnabled` Apex class used by an Experience Cloud site."
+- [LWC Secure Apex Classes](https://developer.salesforce.com/docs/platform/lwc/guide/apex-security.html): "an authenticated or guest user can access an `@AuraEnabled` Apex method only when the user's profile or an assigned permission set allows access to the Apex class."
+- [Aura Granting User Access for Apex Classes](https://developer.salesforce.com/docs/atlas.en-us.lightning.meta/lightning/apex_grant_permission.htm): "an authenticated or guest user can access an `@AuraEnabled` Apex method only when the user's profile or an assigned permission set allows access to the Apex class."
+
+### Platform Releases & Changes
+
+Salesforce has previously required explicit Apex class access for internal users (non-Experience Cloud). Though those changes were reverted as of July 2024, the `LoggerLogCreator` permission set can be assigned if similar requirements return:
+
+- [Require User Access to Apex Classes Invoked by Flow (Retired)](https://help.salesforce.com/s/articleView?id=sf.os_grant_apex_class_access_to_a_community_profile.htm&language=en_US&type=5): This release update previously required explicit access to invocable Apex classes used by Flow.
+- [Disable Rules for Enforcing Explicit Access to Apex Classes](https://help.salesforce.com/s/articleView?id=release-notes.rn_automate_flow_release_update_disable_apex_access_controls.htm&release=240&type=5): This update rolled back the previous requirement.
+
+## LoggerEndUser Permission Set
+
+This permission set provides limited access to Nebula Logger's data:
+
+- All permissions from `LoggerLogCreator`
+- Read-only access (but **not** view-all) to logging records shared with the user
+  - By default, users see only their own records plus any manually shared with them
+  - Some fields in Nebula Logger's custom objects are intentionally excluded from this permission set
+- Does **not** provide access to Nebula Logger's console app, but includes access to the custom objects' tabs
+
+## LoggerLogViewer Permission Set
+
+This permission set provides read-only access to Nebula Logger's data and custom features:
+
+- View-all access (read-only) to all objects, fields, and records in Nebula Logger's data model
+- Read-only access to several custom tabs in Nebula Logger's console app, each displaying a custom LWC
+- Does **not** provide explicit access to generate logging data, though users can still generate logs in most cases since Nebula Logger runs in system mode
+
+## LoggerAdmin Permission Set
+
+This permission set provides full control of Nebula Logger's data and custom features:
+
+- All permissions from `LoggerLogCreator`
+- All view-all permissions from `LoggerLogViewer`
+- Modify-all access to all objects, fields, and records in Nebula Logger's data model
+- Edit access to several custom tabs in Nebula Logger's console app, each displaying a custom LWC
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Assigning-Permission-Sets), © Jonathan Gillespie and contributors, MIT License.*

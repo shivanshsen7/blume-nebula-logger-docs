@@ -1,0 +1,68 @@
+---
+title: Tagging & Data
+description: Tag log entries from Apex, Flow, or custom metadata rules, and extend the data model with custom fields.
+sidebar:
+  label: Tagging & Data
+  icon: tag
+  order: 5
+---
+
+## Tagging log entries
+
+<Tabs>
+  <Tab title="Apex">
+
+```apex
+Logger.debug('message').addTag('tag1').addTag('tag2');
+Logger.debug('message').addTags(new List<String>{ 'tag1', 'tag2' });
+```
+
+  </Tab>
+  <Tab title="Flow">
+    Specify a comma-separated list in the **Tags** input of any logging action — for example `billing, retry-eligible`.
+  </Tab>
+  <Tab title="Custom Metadata">
+    Configure `LogEntryTagRule__mdt` records to auto-apply tags based on field values — comparison type, comparison value, and one or many tags per rule, all without code.
+  </Tab>
+</Tabs>
+
+Two tagging backends are supported: Nebula Logger's own `LoggerTag__c` / `LogEntryTag__c` objects (the default, with standard Salesforce sharing), or Chatter Topics/`TopicAssignment` if your org already leans on Chatter.
+
+## Extending the data model
+
+Nebula Logger's objects aren't a black box — you can add your own fields and have them populate automatically.
+
+```apex
+// Transaction-level custom field
+Logger.setField(Schema.LogEntryEvent__e.MyCustomField__c, someValue);
+
+// Entry-level custom field, fluent-chained
+Logger.debug('message').setField(Schema.LogEntryEvent__e.MyCustomField__c, someValue);
+```
+
+```javascript
+// Same idea from a Lightning Web Component
+logger.setField({ MyCustomField__c: someValue });
+logEntryBuilder.setField({ MyCustomField__c: someValue });
+```
+
+1. Add the custom field to `LogEntryEvent__e`
+2. Set it from Apex or JavaScript as shown above
+3. Optionally map it onto `Log__c`, `LogEntry__c`, or `LoggerScenario__c` via a `LoggerFieldMapping__mdt` record — Nebula Logger populates the target field automatically
+
+## Log management, day to day
+
+<CardGroup cols={2}>
+  <Card title="Logger Console app" icon="layout-dashboard">
+    Dedicated tabs for `Log__c`, `LogEntry__c`, `LogEntryTag__c`, and `LoggerTag__c` with normal object-level access control.
+  </Card>
+  <Card title="Related Log Entries component" icon="link">
+    Drop onto any record page — shows log entries tied to that record, with SOSL search and field-level security enforced.
+  </Card>
+  <Card title="View JSON quick action" icon="braces">
+    Inspect the raw JSON for a `Log__c` and its entries, with one-click copy.
+  </Card>
+  <Card title="Batch purging" icon="trash-2">
+    `LogBatchPurger` deletes anything past its retention date; `LogBatchPurgeScheduler` runs it on a schedule. Default retention is 14 days, and it's configurable.
+  </Card>
+</CardGroup>

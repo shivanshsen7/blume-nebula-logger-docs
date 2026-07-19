@@ -1,0 +1,130 @@
+---
+title: Logging in Lightning Components
+description: Use the logger LWC to log messages from Lightning Web Components and Aura components with a fluent API.
+sidebar:
+  label: Logging in Components
+  order: 6
+---
+
+The Nebula Logger framework provides a `logger` LWC that enables frontend logging from Lightning Web Components and Aura components. This component mirrors the functionality available in Apex, allowing you to use the same logging API across your entire Salesforce application.
+
+## Quick Start
+
+Embed the `logger` LWC in your component's markup, then retrieve it in your controller to call logging methods.
+
+<Tabs>
+  <Tab title="LWC">
+```javascript
+// Retrieve logger from your component's template
+const logger = this.template.querySelector("c-logger");
+
+logger.error("Hello, world!").addTag("some important tag");
+logger.warn("Hello, world!");
+logger.info("Hello, world!");
+logger.debug("Hello, world!");
+logger.fine("Hello, world!");
+logger.finer("Hello, world!");
+logger.finest("Hello, world!");
+logger.saveLog();
+```
+  </Tab>
+  <Tab title="Aura">
+```javascript
+// Retrieve logger from your component's markup
+const logger = component.find("logger");
+
+logger.error("Hello, world!").addTag("some important tag");
+logger.warn("Hello, world!");
+logger.info("Hello, world!");
+logger.debug("Hello, world!");
+logger.fine("Hello, world!");
+logger.finer("Hello, world!");
+logger.finest("Hello, world!");
+logger.saveLog();
+```
+  </Tab>
+</Tabs>
+
+## Features
+
+The `logger` LWC provides a fluent API for frontend logging, similar to the `Logger` and `LogEntryBuilder` Apex classes. This means you can chain method calls for a clean, expressive coding style.
+
+When you log entries from Lightning components, Nebula Logger automatically captures metadata about your component:
+
+- **Component type** — whether the entry came from an Aura or LWC component
+- **Component name** — the name of the component that called `logger`
+- **Component function** — the method or function that made the log call
+
+This information is stored on each `LogEntry__c` record and displayed in a dedicated "Lightning Component Information" section. You can view all component log entries using the included list view "All Component Log Entries".
+
+## Detailed Examples
+
+### LWC Implementation
+
+Add the logger component to your LWC's template:
+
+```html
+<template>
+  <c-logger></c-logger>
+
+  <div>My component</div>
+</template>
+```
+
+Then call the logger in your controller:
+
+```javascript
+import { LightningElement } from "lwc";
+
+export default class LoggerDemo extends LightningElement {
+  logSomeStuff() {
+    const logger = this.template.querySelector("c-logger");
+
+    logger.error("Hello, world!").addTag("some important tag");
+    logger.warn("Hello, world!");
+    logger.info("Hello, world!");
+    logger.debug("Hello, world!");
+    logger.fine("Hello, world!");
+    logger.finer("Hello, world!");
+    logger.finest("Hello, world!");
+
+    logger.saveLog();
+  }
+}
+```
+
+### Aura Implementation
+
+Add the logger component to your Aura component's markup:
+
+```html
+<aura:component implements="force:appHostable">
+  <c:logger aura:id="logger" />
+
+  <div>My component</div>
+</aura:component>
+```
+
+Then call the logger in your controller:
+
+```javascript
+({
+  logSomeStuff: function (component, event, helper) {
+    const logger = component.find("logger");
+
+    logger.error("Hello, world!").addTag("some important tag");
+    logger.warn("Hello, world!");
+    logger.info("Hello, world!");
+    logger.debug("Hello, world!");
+    logger.fine("Hello, world!");
+    logger.finer("Hello, world!");
+    logger.finest("Hello, world!");
+
+    logger.saveLog();
+  },
+});
+```
+
+---
+
+*Adapted from the [Nebula Logger wiki](https://github.com/jongpie/NebulaLogger/wiki/Logging-in-Components), © Jonathan Gillespie and contributors, MIT License.*

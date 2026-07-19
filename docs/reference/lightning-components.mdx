@@ -1,0 +1,78 @@
+---
+title: "Lightning Components Reference"
+description: "Public JavaScript API for Nebula Logger's `logger` LWC, used to create and save log entries directly from Lightning web components."
+sidebar: { label: "Lightning Components", order: 6 }
+---
+
+The **`logger`** Lightning web component gives client-side code the same logging capabilities that Apex developers get from the `Logger` class. It exposes a small set of module-level functions — most importantly `getLogger()` — that return a `LoggerService` instance. That service buffers log entries (as `LogEntryBuilder` instances) in memory during the transaction and later saves them as `LogEntryEvent__e` platform events, mirroring the Apex engine's buffer-then-`saveLog()` pattern.
+
+Two files make up the public API:
+
+- **`logger.js`** — the core module; import `getLogger()` (or the deprecated `createLogger()`) to obtain the logger service and its level-specific entry-creation methods.
+- **`logEntryBuilder.js`** — the builder class returned by each logging call, used to attach additional detail (record, tags, exception, custom fields) to a single log entry before it is saved.
+
+## logger.js
+
+Recommended usage is the synchronous `getLogger()` function:
+
+```js
+import { getLogger } from 'c/logger';
+
+const logger = getLogger();
+logger.info('Some message').addTag('Some tag');
+logger.saveLog();
+```
+
+The deprecated `createLogger()` function is still available for cases where an async pattern is preferred:
+
+```js
+import { createLogger } from 'c/logger';
+
+const logger = await createLogger();
+```
+
+| Function | Returns | Description |
+| --- | --- | --- |
+| `getUserSettings()` | `ComponentLogger.ComponentLoggerSettings` | Returns **read-only** information about the current user's settings, stored in `LoggerSettings__c` |
+| `setField(fieldToValue)` | — | Sets multiple field values on the builder's `LogEntryEvent__e` record. `fieldToValue` is an `Object`, e.g. `{"SomeField__c": "some value", "AnotherField__c": "another value"}` |
+| `setScenario(scenario)` | — | Sets the scenario name (`String`) for the current transaction — stored in `LogEntryEvent__e.Scenario__c` and `Log__c.Scenario__c`, and can be used to filter & group logs |
+| `exception(message, exception)` | `LogEntryBuilder` | Creates a new log entry with logging level == `LoggingLevel.ERROR`, automatically saves the log, and then throws the provided exception. `message` is a `String`; `exception` is a JavaScript `Error` (or Apex HTTP error) |
+| `error(message)` | `LogEntryBuilder` | Creates a new log entry with logging level == `LoggingLevel.ERROR` |
+| `warn(message)` | `LogEntryBuilder` | Creates a new log entry with logging level == `LoggingLevel.WARN` |
+| `info(message)` | `LogEntryBuilder` | Creates a new log entry with logging level == `LoggingLevel.INFO` |
+| `debug(message)` | `LogEntryBuilder` | Creates a new log entry with logging level == `LoggingLevel.DEBUG` |
+| `fine(message)` | `LogEntryBuilder` | Creates a new log entry with logging level == `LoggingLevel.FINE` |
+| `finer(message)` | `LogEntryBuilder` | Creates a new log entry with logging level == `LoggingLevel.FINER` |
+| `finest(message)` | `LogEntryBuilder` | Creates a new log entry with logging level == `LoggingLevel.FINEST` |
+| `getBufferSize()` | `Integer` | Returns the number of entries that have been generated but not yet saved |
+| `flushBuffer()` | — | Discards any entries that have been generated but not yet saved |
+| `saveLog(saveMethod)` | — | Saves any entries in the buffer, using the specified save method (`String` enum value of `Logger.SaveMethod`) for only this call. All subsequent calls to `saveLog()` use the transaction save method |
+| `createLogger()` | `Promise.<LoggerService>` | *Deprecated* — use `getLogger()` instead. Async function that returns a fully-loaded logger service; requires some code to execute async, so the service is not immediately available. Example: `const logger = await createLogger();` |
+| `getLogger()` | `LoggerService` | **Recommended.** Synchronous function that returns a ready-to-use logger service. Internally some code still executes async, but the service can immediately be used without awaiting a Promise. Example: `const logger = getLogger();` |
+
+Each `message`/`fine`/`finer`/`finest`/etc. call returns the new entry's `LogEntryBuilder` instance, which is useful for chaining additional builder methods (see below).
+
+## logEntryBuilder.js
+
+`LogEntryBuilder` is the fluent object returned by `logger`'s level-specific methods (`debug()`, `info()`, `warn()`, `error()`, etc.). Its methods let you enrich a single log entry with a record, tags, exception details, a parsed stack trace, or arbitrary custom fields — most return the same `LogEntryBuilder` instance so calls can be chained.
+
+```js
+logger.error('Unexpected error').setRecordId(recordId).addTag('Checkout Flow');
+```
+
+| Method | Returns | Description |
+| --- | --- | --- |
+| `setMessage(message)` | `LogEntryBuilder` | Sets the log entry event's message field. `message` is a `String` |
+| `setRecordId(recordId)` | `LogEntryBuilder` | Sets the log entry event's record fields. `recordId` is the `String` ID of the SObject record related to the entry |
+| `setRecord(record)` | `LogEntryBuilder` | Sets the log entry event's record fields. `record` is the `Object` (SObject) related to the entry — its JSON is automatically added to the entry |
+| `setScenario(scenario)` | `LogEntryBuilder` | Sets the log entry event's scenario field. `scenario` is a `String` |
+| `setError(error)` | `LogEntryBuilder` | *Deprecated* — use `setExceptionDetails(exception)` instead. The name is easily confused with the logger function `logger.error()` (e.g. `logger.error('Unexpected error').setError(someErrorObject);`); `setExceptionDetails(exception)` provides identical functionality while aligning with the Apex builder's method name |
+| `setExceptionDetails(exception)` | `LogEntryBuilder` | Sets the log entry event's exception fields. `exception` is a JavaScript `Error` (or Apex HTTP error) |
+| `setField(fieldToValue)` | `LogEntryBuilder` | Sets multiple field values on the builder's `LogEntryEvent__e` record. `fieldToValue` is an `Object`, e.g. `{"SomeField__c": "some value", "AnotherField__c": "another value"}` |
+| `parseStackTrace(originStackTraceError)` | `LogEntryBuilder` | Parses the provided error's stack trace and sets the log entry's origin & stack trace fields. `originStackTraceError` is a JavaScript `Error` with a stack trace to parse |
+| `addTag(tag)` | `LogEntryBuilder` | Appends the tag (`String`) to the existing list of tags |
+| `addTags(tags)` | `LogEntryBuilder` | Appends the tags (`Array.<String>`) to the existing list of tags |
+| `getComponentLogEntry()` | `ComponentLogEntry` | Returns the object used to save log entry data — an instance of `ComponentLogEntry` that matches the Apex class `ComponentLogger.ComponentLogEntry` |
+
+---
+*Generated from the real Nebula Logger Lightning Components reference docs, © Jonathan Gillespie and contributors, MIT License. See the [source on GitHub](https://github.com/jongpie/NebulaLogger/tree/main/docs/lightning-components) for exhaustive detail.*

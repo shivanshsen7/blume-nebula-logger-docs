@@ -1,0 +1,62 @@
+---
+title: "Apex Reference — Plugins"
+description: "Reference for the optional Apex plugin classes that extend Nebula Logger with BigObject archiving, log retention rules, and Slack alerting."
+sidebar: { label: "Plugins", order: 4 }
+---
+
+The Plugins module contains optional, self-contained extensions built on top of Nebula Logger's core plugin framework (`LoggerPlugin`). Each plugin hooks into the logging or purge pipeline to add extra behavior — archiving log data to a BigObject, applying configurable retention rules, or sending Slack alerts — without changing the core logging engine.
+
+## LogEntryArchivePlugin
+
+Optional plugin that provides a BigObject, `LogEntryArchive__b`, as an alternative storage option to the platform event `LogEntryEvent__e`. It implements the Logger plugin framework's triggerable and batchable interfaces so it can run both when logs are saved and when `LogBatchPurger` runs.
+
+| Method | Description |
+| --- | --- |
+| `execute(LoggerPlugin_t, LoggerTriggerableContext)` → `void` | Converts Logger's buffer of `LogEntryEvent__e` records into `LogEntryArchive__b` records for users with the custom save method `BIG_OBJECT`. |
+| `execute(LoggerPlugin_t, LoggerBatchableContext, List<SObject>)` → `void` | Converts `LogEntry__c` records into `LogEntryArchive__b` records during a `LogBatchPurger` batch run. |
+| `start(LoggerPlugin_t, LoggerBatchableContext)` → `void` | Skips directly deleting `LogEntryTag__c` records in `LogBatchPurger` so tags can be included when entries are archived. |
+| `finish(LoggerPlugin_t, LoggerBatchableContext)` → `void` | No-op method required by the `LoggerPlugin.Batchable` interface. |
+
+## LogEntryArchiveBuilder
+
+Builder class used to construct an instance of the `LogEntryArchive__b` BigObject record, used internally by `LogEntryArchivePlugin`. It can be instantiated from either a `LogEntryEvent__e` platform event or an existing `LogEntry__c` record.
+
+- `LogEntryArchiveBuilder(LogEntryEvent__e logEntryEvent)` — builds from a platform event.
+- `LogEntryArchiveBuilder(LogEntry__c logEntry)` — builds from an existing log entry record.
+- `getLogEntryArchive()` → `LogEntryArchive__b` — returns the built `LogEntryArchive__b` record for this builder instance.
+
+## LogEntryArchiveController
+
+Controller class used by the `logEntryArchives` Lightning web component to display `LogEntryArchive__b` data.
+
+- `getLogEntryArchives()` → `List<LogEntryArchive__b>` — returns the `LogEntryArchive__b` records visible based on the current user's record access.
+
+## LogRetentionRulesPlugin
+
+Optional plugin that adds the ability to create and deploy advanced, configurable rules for setting the retention date of `Log__c` records, using the custom metadata types `LogRetentionRule_t` and `LogRetentionRuleCondition_t`.
+
+| Method | Description |
+| --- | --- |
+| `execute(LoggerPlugin_t, LoggerTriggerableContext)` → `void` | Entry point called by Logger's plugin framework to evaluate and apply the configured retention rules. |
+| `matchesFilter()` → `Boolean` | Determines whether a record matches the configured filter conditions for a rule. |
+| `evaluate(String x)` → `Boolean` | Evaluates a single condition expression. |
+| `getCondition()` → `String` | Returns the condition string being evaluated. |
+| `getField()` → `Schema.SObjectField` | Resolves the `SObjectField` referenced by a condition's field path. |
+| `getValue(SObject record)` → `Object` | Reads the field value off a given record for comparison. |
+
+It also exposes several public properties/inner helpers (`conditions`, `conditionsLogic`, `conditionsLogicType`, `matchesFilter`, `record`, `rule`, plus the internal `FieldPath` and `FilterResult` inner classes) used to build and evaluate the field-path/condition logic behind each retention rule.
+
+## SlackLoggerPlugin
+
+Optional plugin that integrates with Slack to send alerts for important logs. It formats `Log__c`/`LogEntry__c` data into a Slack message payload (attachments, fields, author/title/color metadata) and sends it asynchronously via the Queueable interface.
+
+| Method | Description |
+| --- | --- |
+| `execute(LoggerPlugin_t, LoggerTriggerableContext)` → `void` | Handles the Slack integration; automatically called by Nebula Logger's plugin framework. |
+| `execute(System.QueueableContext)` → `void` | Runs the queueable execute logic required by the `Queueable` interface. |
+
+Its public properties (`attachments`, `fields`, `actions`, `author_name`, `author_link`, `author_icon`, `color`, `fallback`, `pretext`, `text`, `title`, `title_link`, `type`, `url`, `value`, `isShort`) map directly to fields in the Slack message payload structure (attachments, fields, and actions), mirroring Slack's own message-formatting API.
+
+---
+
+*Generated from the real Nebula Logger Apex reference docs (ApexDocs output), © Jonathan Gillespie and contributors, MIT License. See the [full class reference on GitHub](https://github.com/jongpie/NebulaLogger/tree/main/docs/apex/Plugins) for exhaustive detail.*
