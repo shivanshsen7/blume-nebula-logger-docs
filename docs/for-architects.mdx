@@ -13,6 +13,21 @@ Nebula Logger is built 100% natively on the platform — no external dependencie
 
 Log entries are published as `LogEntryEvent__e` platform events using a publish/subscribe pattern. That decouples the *act of logging* from the *cost of logging* — a governor-limit-hungry batch job can fire hundreds of log entries without blocking on DML, and a subscriber trigger handles persistence independently.
 
+```mermaid
+sequenceDiagram
+    participant Job as Batch / sync job
+    participant Logger as Logger (Apex)
+    participant Bus as EventBus
+    participant Sub as Subscriber trigger
+
+    Job->>Logger: Logger.info(...) / .debug(...)
+    Logger->>Logger: buffer log entry
+    Logger->>Bus: publish LogEntryEvent__e
+    Note over Job,Bus: publish is async — the job keeps running,<br/>no DML blocking on the hot path
+    Bus->>Sub: deliver platform event
+    Sub->>Sub: persist Log__c / LogEntry__c
+```
+
 ## Data model
 
 <CodeGroup>

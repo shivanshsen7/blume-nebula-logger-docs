@@ -8,6 +8,13 @@ export default defineConfig({
     site: "https://shivanshsen7.github.io/blume-nebula-logger-docs",
     base: "/blume-nebula-logger-docs",
   },
+  theme: {
+    accent: { light: "#7C3AED", dark: "#A78BFA" },
+    radius: "lg",
+    fonts: {
+      mono: "jetbrains-mono",
+    },
+  },
   navigation: {
     sidebar: [
       "/",

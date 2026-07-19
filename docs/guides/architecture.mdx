@@ -25,6 +25,34 @@ All of the metadata is broken down into 4 layers/modules:
   </Card>
 </CardGroup>
 
+### How the layers connect
+
+```mermaid
+flowchart TD
+    subgraph L1["1. Logger Engine Layer"]
+        A["Apex / LWC / Aura / Flow"] --> E["LogEntryEvent__e"]
+    end
+
+    subgraph L2["2. Log Management Layer"]
+        E --> LOG["Log__c"]
+        LOG --> LE["LogEntry__c"]
+        LE --> LET["LogEntryTag__c"]
+        LET --> LT["LoggerTag__c"]
+    end
+
+    subgraph L3["3. Configuration Layer"]
+        CFG["Custom settings, custom metadata,<br/>and permission sets"]
+    end
+
+    subgraph L4["4. Plugin Layer"]
+        PLUG["Apex or Flow plugins, e.g. Slack"]
+    end
+
+    L3 -.governs.-> L1
+    L3 -.governs.-> L2
+    L4 -.extends.-> L2
+```
+
 ## 1. Logger Engine Layer
 
 The core of Nebula Logger that makes logging work. Currently, logging is supported for:

@@ -6,6 +6,19 @@ sidebar: { label: "Data Model", order: 7 }
 
 Nebula Logger's schema is spread across four architectural layers described in the project wiki. The **Logger Engine** layer publishes a single platform event, `LogEntryEvent__e`, every time application code calls the logger — this decouples the act of logging from the act of saving, so a log entry can be captured even if the surrounding transaction later fails or rolls back. The **Log Management** layer is responsible for turning those events into durable records: each `LogEntryEvent__e` is saved as a `LogEntry__c` record, and related entries are grouped under a single parent `Log__c` record (one `Log__c` per transaction, keyed on a shared transaction ID). Tagging is modeled as a many-to-many relationship: `LoggerTag__c` holds the reusable tag values, and the `LogEntryTag__c` junction object links individual `LogEntry__c` records to those tags. The **Configuration** layer's `LoggerSettings__c` is a hierarchy custom setting, so it can be defaulted at the org level and overridden per-profile or per-user to control things like whether logging is enabled, which logging level is captured, and how long logs are retained. A fourth object referenced here, `LoggerScenario__c`, backs the "scenario" feature that lets logs and entries be grouped and filtered by a named business process rather than only by transaction. A **Plugin** layer (not covered on this page) can extend behavior on any of these five objects.
 
+```mermaid
+erDiagram
+    LogEntryEvent__e ||--|| LogEntry__c : "saved as"
+    Log__c ||--o{ LogEntry__c : "groups (1 Log__c per transaction)"
+    Log__c ||--o{ Log__c : "parent/child via ParentLog__c"
+    LoggerTag__c ||--o{ LogEntryTag__c : "applied via"
+    LogEntry__c ||--o{ LogEntryTag__c : "tagged via"
+    LoggerScenario__c ||--o{ Log__c : "groups via Scenario__c"
+    LoggerScenario__c ||--o{ LogEntry__c : "groups via EntryScenario__c"
+```
+
+`LoggerSettings__c` isn't shown above — it's a hierarchy custom setting that configures the pipeline (org, profile, or user level), not a record these objects link to by foreign key.
+
 The sections below group a curated subset of each object's real field names (verified against the object metadata) into naming-pattern categories. Field purposes are inferred from their names and the wiki text — where the inference is a guess rather than a documented fact, this page says so plainly.
 
 ## Log__c

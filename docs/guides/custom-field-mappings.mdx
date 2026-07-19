@@ -59,9 +59,10 @@ Once you've added the custom field to both `LogEntryEvent__e` and your target ob
 
 ## Setting Custom Fields in Code
 
+Both platforms call a `setField()` method to populate custom fields — the instance methods on `LogEntryEventBuilder` in Apex, or the function in `logEntryBuilder.js` in Lightning components.
+
 <Tabs>
 <Tab title="Apex">
-Use the `setField()` instance methods on `LogEntryEventBuilder` to populate custom fields:
 
 ```apex
 Logger.info('hello, world')
@@ -76,7 +77,6 @@ Logger.info('hello, world')
 </Tab>
 
 <Tab title="JavaScript">
-Use the `setField()` function in `logEntryBuilder.js`, passing an object containing your custom field names and values:
 
 ```javascript
 import { createLogger } from "c/logger";

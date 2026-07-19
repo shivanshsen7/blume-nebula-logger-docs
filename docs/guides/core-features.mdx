@@ -14,10 +14,10 @@ Two other topics in the upstream wiki page — Custom Field Mappings and Scenari
 
 ## Tagging log entries
 
+Apex developers can use 2 methods on `LogEntryBuilder` to add tags: `LogEntryEventBuilder.addTag(String)` and `LogEntryEventBuilder.addTags(List<String>)`.
+
 <Tabs>
   <Tab title="Apex">
-
-Apex developers can use 2 methods on `LogEntryBuilder` to add tags: `LogEntryEventBuilder.addTag(String)` and `LogEntryEventBuilder.addTags(List<String>)`.
 
 ```apex
 // Use addTag(String tagName) for adding 1 tag at a time

@@ -1,7 +1,7 @@
 # Nebula Logger Docs — a Blume demo
 
 <p align="center">
-  <img src="./assets/readme/hero.svg" width="100%" alt="Nebula Logger Docs, a Blume demo. An unofficial rebuild turning one scattered GitHub wiki into 39 structured pages via a 33-agent fan-out — 53 Apex classes, 26 wiki pages, MIT licensed.">
+  <img src="./assets/readme/hero.svg" width="100%" alt="Nebula Logger Docs, a Blume demo. An unofficial documentation rebuild for Nebula Logger, the open-source Salesforce logging framework — covering Apex, Flow, LWC, Aura, and OmniStudio, MIT licensed.">
 </p>
 
 <p align="center">
@@ -45,10 +45,12 @@ npm run doctor   # health check
 
 Requires Node.js 22.12+.
 
-## Deploying to GitHub Pages
+## Deploying your own fork
 
-1. Push this repo to GitHub (public repo recommended).
-2. In `blume.config.ts`, uncomment and fill in the `deployment` block with your GitHub Pages URL:
+This copy is already live at the link above. To point a fork at your own GitHub Pages URL instead:
+
+1. Push your fork to GitHub (public repo recommended).
+2. In `blume.config.ts`, update the `deployment` block with your GitHub Pages URL:
    ```ts
    deployment: {
      site: "https://<your-username>.github.io/<repo-name>",

@@ -53,14 +53,13 @@ When using `SYNCHRONOUS_DML`, any exceptions will prevent your log entries from 
 
 ### Track related logs in batchable and queueable jobs
 
-In Salesforce, asynchronous jobs like batchable and queueable run in separate transactions - each with its own unique transaction ID. To relate these jobs back to the original log, Apex developers can use the method `Logger.setParentLogTransactionId(String)`. `Logger` uses this value to relate child `Log__c` records, using the field `Log__c.ParentLog__c`.
+In Salesforce, asynchronous jobs like batchable and queueable run in separate transactions - each with its own unique transaction ID. To relate these jobs back to the original log, Apex developers can use the method `Logger.setParentLogTransactionId(String)`. `Logger` uses this value to relate child `Log__c` records, using the field `Log__c.ParentLog__c`. The examples below relate all of a batch or queueable job's logs back to the transaction that kicked it off.
 
 <Tabs>
   <Tab title="Batchable">
 
-This example batchable class shows how you can leverage this feature to relate all of your batch job's logs together. If you deploy this example class to your org, you can run it using `Database.executeBatch(new BatchableLoggerExample());`.
-
 ```apex
+// Deploy this class, then run it with: Database.executeBatch(new BatchableLoggerExample());
 public with sharing class BatchableLoggerExample implements Database.Batchable<SObject>, Database.Stateful {
     private String originalTransactionId;
 
@@ -103,9 +102,9 @@ public with sharing class BatchableLoggerExample implements Database.Batchable<S
   </Tab>
   <Tab title="Queueable">
 
-Queueable jobs can also leverage the parent transaction ID to relate logs together. This example queueable job runs several chained instances, each using `parentLogTransactionId` to relate its log back to the original instance's log. If you deploy this example class to your org, you can run it using `System.enqueueJob(new QueueableLoggerExample(3));`.
-
 ```apex
+// Queueable jobs can chain the same way — each instance passes parentLogTransactionId to the next.
+// Deploy this class, then run it with: System.enqueueJob(new QueueableLoggerExample(3));
 public with sharing class QueueableLoggerExample implements Queueable {
     private Integer numberOfJobsToChain;
     private String parentLogTransactionId;
@@ -148,6 +147,21 @@ public with sharing class QueueableLoggerExample implements Queueable {
 
   </Tab>
 </Tabs>
+
+```mermaid
+sequenceDiagram
+    participant Start as start()
+    participant Exec as execute() (per batch scope)
+    participant Finish as finish()
+
+    Start->>Start: originalTransactionId = Logger.getTransactionId()
+    Start->>Start: log + save (parent Log__c)
+    Exec->>Exec: Logger.setParentLogTransactionId(originalTransactionId)
+    Exec->>Exec: log each record + save (child Log__c)
+    Finish->>Finish: Logger.setParentLogTransactionId(originalTransactionId)
+    Finish->>Finish: log completion + save (child Log__c)
+    Note over Start,Finish: each phase runs in its own transaction —<br/>ParentLog__c links every child Log__c back to the original
+```
 
 ### Overloads for logging methods
 

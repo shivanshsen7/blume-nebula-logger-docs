@@ -29,9 +29,8 @@ This framework (currently in beta) makes it easy to build your own plugins, or d
     4. `Input` parameter `triggerOld` - The list of logger records as they exist in the database
   </Tab>
   <Tab title="Apex">
-    Your Apex class should implement `LoggerPlugin.Triggerable`. For example:
-
     ```apex
+    // Implement LoggerPlugin.Triggerable:
     public class ExampleTriggerablePlugin implements LoggerPlugin.Triggerable {
       public void execute(LoggerPlugin__mdt configuration, LoggerTriggerableContext input) {
         // Example: only run the plugin for Log__c records

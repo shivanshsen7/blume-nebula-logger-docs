@@ -1,0 +1,31 @@
+---
+// Click any Mermaid diagram to zoom it to full-screen; click again (or Esc) to
+// close. Registered site-wide via components.ts as the PageFooter layout slot.
+---
+
+<script>
+  const closeAll = () => {
+    document
+      .querySelectorAll('blume-mermaid[data-zoomed="true"]')
+      .forEach((el) => el.removeAttribute("data-zoomed"));
+  };
+
+  document.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement;
+    const diagram = target.closest("blume-mermaid");
+    if (!diagram) {
+      return;
+    }
+    const isZoomed = diagram.getAttribute("data-zoomed") === "true";
+    closeAll();
+    if (!isZoomed) {
+      diagram.setAttribute("data-zoomed", "true");
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeAll();
+    }
+  });
+</script>

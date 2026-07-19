@@ -1,0 +1,26 @@
+/* Mermaid diagrams: fill the available width instead of rendering at
+   Mermaid's default size, and support click-to-zoom (see components/MermaidZoom.astro). */
+blume-mermaid svg {
+  width: 100%;
+  height: auto;
+  cursor: zoom-in;
+}
+
+blume-mermaid[data-zoomed="true"] {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: var(--blume-background);
+  padding: 2rem;
+  overflow: auto;
+  cursor: zoom-out;
+}
+
+blume-mermaid[data-zoomed="true"] svg {
+  width: auto;
+  height: auto;
+  max-width: 95vw;
+  max-height: 95vh;
+  margin: auto;
+  display: block;
+}
