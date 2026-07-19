@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Nebula Logger Docs</title>
+  <desc id="desc">A nebula star field of colored log-level dots resolving through constellation lines into three structured console log lines reporting real facts about the Nebula Logger Docs project: 39 pages, 33 AI agents, 53 Apex classes, and 101/220 field counts.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A0D1E"/>
+      <stop offset="100%" stop-color="#141A33"/>
+    </linearGradient>
+    <radialGradient id="nebulaViolet" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebulaMagenta" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#EC4899" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#EC4899" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="titleGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lineFadeCyan" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="lineFadeSlate" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#94A3B8" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="420" fill="url(#bg)"/>
+  <circle cx="300" cy="80" r="220" fill="url(#titleGlow)"/>
+
+  <circle cx="160" cy="230" r="140" fill="url(#nebulaViolet)"/>
+  <circle cx="260" cy="300" r="120" fill="url(#nebulaMagenta)"/>
+  <circle cx="115" cy="320" r="95" fill="url(#nebulaViolet)" opacity="0.6"/>
+
+  <g stroke="#C4B5FD" stroke-width="1" opacity="0.28" fill="none">
+    <path d="M90,175 L145,200"/>
+    <path d="M145,200 L200,180"/>
+    <path d="M105,230 L160,260"/>
+    <path d="M160,260 L230,220"/>
+    <path d="M90,280 L130,300"/>
+    <path d="M190,320 L250,300"/>
+    <path d="M220,300 L280,240"/>
+    <path d="M260,340 L310,190"/>
+    <path d="M100,350 L150,360"/>
+    <path d="M330,330 L370,300"/>
+  </g>
+
+  <g>
+    <circle cx="90" cy="175" r="2.5" fill="#C4B5FD"/>
+    <circle cx="120" cy="160" r="2" fill="#E2E8F0"/>
+    <circle cx="145" cy="200" r="3" fill="#38BDF8"/>
+    <circle cx="170" cy="150" r="2" fill="#E2E8F0"/>
+    <circle cx="105" cy="230" r="2.5" fill="#F87171"/>
+    <circle cx="200" cy="180" r="2" fill="#C4B5FD"/>
+    <circle cx="160" cy="260" r="3" fill="#FBBF24"/>
+    <circle cx="230" cy="220" r="2" fill="#E2E8F0"/>
+    <circle cx="90" cy="280" r="2.5" fill="#94A3B8"/>
+    <circle cx="250" cy="160" r="2" fill="#C4B5FD"/>
+    <circle cx="130" cy="300" r="2" fill="#E2E8F0"/>
+    <circle cx="280" cy="240" r="2.5" fill="#38BDF8"/>
+    <circle cx="190" cy="320" r="2" fill="#E2E8F0"/>
+    <circle cx="310" cy="190" r="2" fill="#C4B5FD"/>
+    <circle cx="70" cy="320" r="2" fill="#E2E8F0"/>
+    <circle cx="220" cy="300" r="2.5" fill="#F87171"/>
+    <circle cx="340" cy="260" r="2" fill="#E2E8F0"/>
+    <circle cx="100" cy="350" r="2" fill="#C4B5FD"/>
+    <circle cx="260" cy="340" r="2.5" fill="#FBBF24"/>
+    <circle cx="330" cy="330" r="2" fill="#E2E8F0"/>
+    <circle cx="150" cy="360" r="2" fill="#E2E8F0"/>
+    <circle cx="300" cy="355" r="2" fill="#C4B5FD"/>
+    <circle cx="370" cy="295" r="2" fill="#38BDF8"/>
+    <circle cx="370" cy="200" r="2" fill="#E2E8F0"/>
+    <circle cx="378" cy="345" r="2" fill="#94A3B8"/>
+  </g>
+
+  <path d="M130,190 Q300,175 452,164" stroke="url(#lineFadeCyan)" stroke-width="2" fill="none"/>
+  <path d="M150,290 Q300,258 452,242" stroke="url(#lineFadeCyan)" stroke-width="2" fill="none"/>
+  <path d="M120,350 Q300,332 452,320" stroke="url(#lineFadeSlate)" stroke-width="2" fill="none"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <rect x="452" y="146" width="700" height="66" rx="8" fill="#FFFFFF" opacity="0.035"/>
+    <circle cx="452" cy="164" r="4" fill="#38BDF8"/>
+    <rect x="470" y="150" width="80" height="28" rx="6" fill="#38BDF8" opacity="0.18" stroke="#38BDF8" stroke-opacity="0.6"/>
+    <text x="510" y="169" font-size="18" fill="#38BDF8" text-anchor="middle">INFO</text>
+    <text x="568" y="169" font-size="16" fill="#64748B">10:42:01.184</text>
+    <text x="470" y="202" font-size="20" fill="#E2E8F0">6 Start Here + 26 Guides + 7 Reference = 39 pages</text>
+
+    <rect x="452" y="224" width="700" height="66" rx="8" fill="#FFFFFF" opacity="0.035"/>
+    <circle cx="452" cy="242" r="4" fill="#38BDF8"/>
+    <rect x="470" y="228" width="80" height="28" rx="6" fill="#38BDF8" opacity="0.18" stroke="#38BDF8" stroke-opacity="0.6"/>
+    <text x="510" y="247" font-size="18" fill="#38BDF8" text-anchor="middle">INFO</text>
+    <text x="568" y="247" font-size="16" fill="#64748B">10:42:01.512</text>
+    <text x="470" y="280" font-size="20" fill="#E2E8F0">33 AI agents cloned &amp; adapted the real wiki</text>
+
+    <rect x="452" y="302" width="700" height="66" rx="8" fill="#FFFFFF" opacity="0.035"/>
+    <circle cx="452" cy="320" r="4" fill="#94A3B8"/>
+    <rect x="470" y="306" width="80" height="28" rx="6" fill="#94A3B8" opacity="0.18" stroke="#94A3B8" stroke-opacity="0.6"/>
+    <text x="510" y="325" font-size="18" fill="#94A3B8" text-anchor="middle">DEBUG</text>
+    <text x="568" y="325" font-size="16" fill="#64748B">10:42:02.077</text>
+    <text x="470" y="358" font-size="20" fill="#E2E8F0">53 Apex classes &#183; Log__c 101 &#183; LogEntry__c 220 fields</text>
+  </g>
+
+  <text x="64" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="52" font-weight="700" fill="#F8FAFC">Nebula Logger Docs</text>
+  <text x="64" y="128" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" fill="#94A3B8">Unofficial fan-made docs for the real Nebula Logger &#8212; rebuilt with Blume</text>
+
+  <text x="1136" y="40" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#94A3B8">UNOFFICIAL &#183; MIT LICENSED</text>
+  <text x="1136" y="62" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#38BDF8">built with Blume</text>
+</svg>
